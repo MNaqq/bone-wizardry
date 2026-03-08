@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GYN Infections — Bone Wizardry</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'JetBrains Mono', monospace;
+    background: linear-gradient(180deg, #020617 0%, #0f172a 100%);
+    color: #e2e8f0; min-height: 100vh; padding: 2rem 1rem; line-height: 1.6;
+  }
+  a { text-decoration: none; }
+
+  /* Nav */
+  .nav { display: flex; justify-content: center; gap: 0.75rem; margin-bottom: 2rem; flex-wrap: wrap; }
+  .nav-link {
+    padding: 0.5rem 1rem; border-radius: 0.75rem; font-size: 0.75rem; font-weight: 700;
+    border: 2px solid #334155; color: #94a3b8; transition: all 0.3s; cursor: pointer; font-family: inherit;
+  }
+  .nav-link:hover { border-color: #ec4899; color: #ec4899; background: #ec489910; }
+  .nav-link.active { border-color: #ec4899; color: #ec4899; background: #ec489910; }
+
+  .header { text-align: center; margin-bottom: 2.5rem; }
+  .header-sub { color: #64748b; font-size: 0.7rem; letter-spacing: 0.4em; text-transform: uppercase; margin-bottom: 0.5rem; }
+  .header h1 {
+    font-size: 1.8rem; font-weight: 900;
+    background: linear-gradient(135deg, #ec4899, #a855f7, #3b82f6);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .header-desc { color: #64748b; font-size: 0.75rem; margin-top: 0.5rem; max-width: 32rem; margin-left: auto; margin-right: auto; }
+
+  .section-label {
+    text-align: center; color: #475569; font-size: 0.65rem; letter-spacing: 0.3em;
+    text-transform: uppercase; margin: 3rem 0 1.5rem; position: relative;
+  }
+  .section-label::before, .section-label::after {
+    content: ''; position: absolute; top: 50%; width: 4rem; height: 1px; background: #1e293b;
+  }
+  .section-label::before { right: calc(50% + 5rem); }
+  .section-label::after { left: calc(50% + 5rem); }
+  .section-title {
+    text-align: center; font-size: 1.3rem; font-weight: 900; margin-bottom: 0.5rem;
+  }
+  .section-sub { text-align: center; color: #64748b; font-size: 0.75rem; margin-bottom: 2rem; }
+
+  /* ===== BATTLE CARDS ===== */
+  .lineup { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; max-width: 64rem; margin: 0 auto 1rem; }
+
+  .villain-card {
+    perspective: 800px; height: 480px; cursor: pointer;
+  }
+  .villain-inner {
+    position: relative; width: 100%; height: 100%;
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-style: preserve-3d;
+  }
+  .villain-card.flipped .villain-inner { transform: rotateY(180deg); }
+  .villain-front, .villain-back {
+    position: absolute; width: 100%; height: 100%; border-radius: 1.25rem;
+    backface-visibility: hidden; -webkit-backface-visibility: hidden;
+    border: 2px solid #1e293b; overflow: hidden;
+  }
+  .villain-front {
+    background: #0f172a; padding: 1.5rem; display: flex; flex-direction: column;
+  }
+  .villain-back {
+    background: #0f172a; padding: 1.5rem; transform: rotateY(180deg);
+    display: flex; flex-direction: column; overflow-y: auto;
+  }
+
+  .v-avatar { font-size: 2.5rem; text-align: center; margin-bottom: 0.5rem; }
+  .v-name { font-size: 1.1rem; font-weight: 900; text-align: center; color: var(--vc); margin-bottom: 0.15rem; }
+  .v-organism { font-size: 0.65rem; color: #64748b; text-align: center; font-style: italic; margin-bottom: 1rem; }
+
+  .v-stat { display: flex; justify-content: space-between; align-items: center; padding: 0.4rem 0; border-bottom: 1px solid #1e293b; }
+  .v-stat-label { font-size: 0.65rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; }
+  .v-stat-value { font-size: 0.75rem; font-weight: 700; text-align: right; max-width: 60%; }
+
+  .v-hallmark {
+    margin-top: auto; padding: 0.6rem 0.8rem; border-radius: 0.75rem; text-align: center;
+    background: #eab30815; border: 1px solid #eab30833; font-size: 0.75rem; font-weight: 800; color: #fde047;
+  }
+
+  .v-badge {
+    position: absolute; top: 0.75rem; right: 0.75rem;
+    padding: 0.2rem 0.5rem; border-radius: 0.5rem; font-size: 0.6rem; font-weight: 800;
+  }
+  .badge-sti { background: #ef444430; color: #fca5a5; border: 1px solid #ef444444; }
+  .badge-no-sti { background: #22c55e20; color: #86efac; border: 1px solid #22c55e44; }
+
+  .v-flip-hint {
+    position: absolute; bottom: 0.6rem; right: 0.8rem; font-size: 0.55rem; color: #334155;
+  }
+
+  .v-back-title { font-size: 0.85rem; font-weight: 800; color: var(--vc); margin-bottom: 0.75rem; text-align: center; }
+  .v-back-section { margin-bottom: 0.75rem; }
+  .v-back-label { font-size: 0.6rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; margin-bottom: 0.25rem; }
+  .v-back-text { font-size: 0.75rem; color: #94a3b8; line-height: 1.5; }
+
+  /* Highlights */
+  .hl { display: inline; padding: 0.1rem 0.35rem; border-radius: 0.25rem; font-weight: 700; }
+  .hl-red { background: #ef444425; color: #fca5a5; border: 1px solid #ef444444; }
+  .hl-blue { background: #3b82f625; color: #93c5fd; border: 1px solid #3b82f644; }
+  .hl-yellow { background: #eab30825; color: #fde047; border: 1px solid #eab30844; }
+  .hl-green { background: #22c55e25; color: #86efac; border: 1px solid #22c55e44; }
+  .hl-purple { background: #a855f725; color: #c4b5fd; border: 1px solid #a855f744; }
+  .hl-orange { background: #f59e0b25; color: #fcd34d; border: 1px solid #f59e0b44; }
+  .hl-pink { background: #ec489925; color: #f9a8d4; border: 1px solid #ec489944; }
+
+  /* Tooltips */
+  .tip { position: relative; cursor: help; border-bottom: 1px dashed currentColor; }
+  .tip .tip-text {
+    visibility: hidden; opacity: 0; position: absolute; bottom: 125%; left: 50%; transform: translateX(-50%);
+    background: #1e293b; color: #e2e8f0; border: 1px solid #475569; border-radius: 0.5rem;
+    padding: 0.5rem 0.75rem; font-size: 0.7rem; font-weight: 400; line-height: 1.4;
+    width: max-content; max-width: 260px; z-index: 100; transition: opacity 0.2s, visibility 0.2s;
+    box-shadow: 0 4px 20px #00000066; pointer-events: none;
+  }
+  .tip .tip-text::after {
+    content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+    border: 6px solid transparent; border-top-color: #475569;
+  }
+  .tip:hover .tip-text, .tip:focus .tip-text, .tip.active .tip-text { visibility: visible; opacity: 1; }
+  @media (max-width: 600px) {
+    .tip .tip-text { left: auto; right: 0; transform: none; max-width: 220px; }
+    .tip .tip-text::after { left: auto; right: 1rem; }
+  }
+
+  /* ===== FLOWCHART ===== */
+  .flow-wrap { max-width: 40rem; margin: 0 auto; }
+  .flow-node {
+    border: 2px solid #1e293b; border-radius: 1rem; padding: 1.25rem; margin-bottom: 0.75rem;
+    background: #0f172a; cursor: pointer; transition: all 0.4s; text-align: center; position: relative;
+  }
+  .flow-node:hover { border-color: #334155; }
+  .flow-node.active { border-color: var(--fc); box-shadow: 0 0 25px color-mix(in srgb, var(--fc) 20%, transparent); }
+  .flow-node.locked { opacity: 0.4; pointer-events: none; }
+  .flow-q { font-size: 0.9rem; font-weight: 800; color: #f1f5f9; margin-bottom: 0.5rem; }
+  .flow-detail { font-size: 0.75rem; color: #94a3b8; max-height: 0; overflow: hidden; transition: max-height 0.4s; }
+  .flow-node.active .flow-detail { max-height: 500px; }
+
+  .flow-branch { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem; }
+  .flow-choice {
+    border: 2px solid #1e293b; border-radius: 0.75rem; padding: 1rem; background: #0f172a;
+    cursor: pointer; transition: all 0.3s; text-align: center;
+  }
+  .flow-choice:hover { border-color: #475569; transform: translateY(-2px); }
+  .flow-choice.selected { border-color: var(--fc); background: color-mix(in srgb, var(--fc) 8%, transparent); }
+  .flow-choice-label { font-size: 0.85rem; font-weight: 800; color: #f1f5f9; margin-bottom: 0.25rem; }
+  .flow-choice-sub { font-size: 0.7rem; color: #64748b; }
+
+  .flow-arrow { text-align: center; color: #334155; font-size: 1.5rem; margin: 0.25rem 0; }
+  .flow-result {
+    border: 2px solid var(--fc); border-radius: 1rem; padding: 1.25rem; margin-bottom: 0.75rem;
+    background: color-mix(in srgb, var(--fc) 5%, #0f172a); text-align: center;
+    max-height: 0; overflow: hidden; transition: max-height 0.5s, padding 0.3s, opacity 0.4s; opacity: 0;
+  }
+  .flow-result.show { max-height: 600px; opacity: 1; padding: 1.25rem; }
+  .flow-result-name { font-size: 1.1rem; font-weight: 900; color: var(--fc); margin-bottom: 0.5rem; }
+  .flow-result-facts { font-size: 0.75rem; color: #94a3b8; text-align: left; }
+  .flow-result-facts li { margin-bottom: 0.35rem; list-style: none; }
+  .flow-result-facts li::before { content: ''; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--fc); margin-right: 0.5rem; vertical-align: middle; }
+
+  /* ===== QUIZ ===== */
+  .quiz-wrap { max-width: 44rem; margin: 0 auto; }
+  .quiz-score {
+    text-align: center; margin-bottom: 1.5rem; padding: 0.75rem; border-radius: 0.75rem;
+    background: #1e293b; font-size: 0.8rem; font-weight: 700; color: #94a3b8;
+  }
+  .quiz-score span { color: #22c55e; font-size: 1.1rem; }
+
+  .quiz-q {
+    border: 2px solid #1e293b; border-radius: 1rem; padding: 1.5rem; margin-bottom: 1.5rem;
+    background: #0f172a;
+  }
+  .quiz-q-num { font-size: 0.65rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; margin-bottom: 0.5rem; }
+  .quiz-q-text { font-size: 0.85rem; color: #e2e8f0; margin-bottom: 1rem; line-height: 1.6; }
+
+  .quiz-options { display: grid; gap: 0.6rem; }
+  .quiz-opt {
+    padding: 0.85rem 1rem; border: 2px solid #1e293b; border-radius: 0.75rem; background: #0f172a;
+    cursor: pointer; transition: all 0.3s; display: flex; gap: 0.75rem; align-items: flex-start;
+  }
+  .quiz-opt:hover:not(.answered) { border-color: #475569; transform: translateX(4px); }
+  .quiz-opt.correct { border-color: #22c55e; background: #22c55e08; }
+  .quiz-opt.wrong { border-color: #ef4444; background: #ef444408; animation: shake 0.4s; }
+  @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
+  .quiz-opt-letter { font-weight: 800; font-size: 0.8rem; color: #64748b; min-width: 1.5rem; }
+  .quiz-opt-text { font-size: 0.8rem; color: #cbd5e1; }
+  .quiz-opt.correct .quiz-opt-letter { color: #22c55e; }
+  .quiz-opt.wrong .quiz-opt-letter { color: #ef4444; }
+
+  .quiz-explain {
+    margin-top: 0.75rem; padding: 0.75rem 1rem; border-radius: 0.75rem; font-size: 0.75rem;
+    color: #94a3b8; max-height: 0; overflow: hidden; transition: max-height 0.4s;
+  }
+  .quiz-explain.show { max-height: 500px; }
+  .quiz-explain.right { background: #22c55e10; border: 1px solid #22c55e33; }
+  .quiz-explain.wrong-exp { background: #ef444410; border: 1px solid #ef444433; }
+
+  /* Medical images */
+  .med-img {
+    margin: 0.75rem 0; border-radius: 0.75rem; overflow: hidden; border: 2px solid #1e293b;
+    background: #fff;
+  }
+  .med-img img { width: 100%; display: block; }
+  .med-img figcaption {
+    padding: 0.5rem 0.75rem; font-size: 0.6rem; color: #64748b; background: #0f172a;
+    border-top: 1px solid #1e293b; line-height: 1.4;
+  }
+  .med-img figcaption a { color: #3b82f6; text-decoration: underline; }
+  .med-img .img-callout {
+    font-size: 0.7rem; color: #fde047; font-weight: 700; display: block; margin-bottom: 0.25rem;
+  }
+
+  /* Confetti canvas */
+  #confetti { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 999; }
+
+  /* Board trap callouts */
+  .trap-box {
+    border: 2px solid #ef444433; border-radius: 1rem; padding: 1.25rem; margin: 1rem 0;
+    background: #ef444408; position: relative;
+  }
+  .trap-icon { position: absolute; top: -0.75rem; left: 1rem; background: #0f172a; padding: 0 0.5rem; font-size: 1rem; }
+  .trap-title { font-size: 0.8rem; font-weight: 800; color: #fca5a5; margin-bottom: 0.5rem; }
+  .trap-text { font-size: 0.75rem; color: #94a3b8; }
+
+  /* Key fact */
+  .key-fact {
+    padding: 0.75rem 1rem; border-radius: 0.75rem; margin: 0.75rem 0; font-size: 0.8rem;
+    font-weight: 600; display: flex; align-items: flex-start; gap: 0.5rem;
+  }
+  .key-fact .icon { font-size: 1rem; flex-shrink: 0; }
+
+  /* Mini table */
+  .mini-table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.7rem; }
+  .mini-table th {
+    padding: 0.6rem 0.5rem; text-align: left; font-weight: 700; font-size: 0.6rem;
+    letter-spacing: 0.1em; text-transform: uppercase; color: #64748b; background: #1e293b;
+  }
+  .mini-table td { padding: 0.55rem 0.5rem; border-bottom: 1px solid #1e293b; color: #cbd5e1; }
+  .mini-table tr:hover { background: #ffffff08; }
+
+  .footer { text-align: center; color: #334155; font-size: 0.7rem; margin-top: 3rem; letter-spacing: 0.1em; }
+
+  /* pH bar inline */
+  .ph-bar { display: inline-flex; align-items: center; gap: 0.4rem; cursor: help; vertical-align: middle; }
+  .ph-bar svg { flex-shrink: 0; }
+  .ph-label { font-size: 0.65rem; font-weight: 700; }
+
+  @media (max-width: 600px) {
+    .lineup { grid-template-columns: 1fr; }
+    .villain-card { height: 520px; }
+    .flow-branch { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="confetti"></canvas>
+
+<div class="nav">
+  <a href="/" class="nav-link">Home</a>
+  <a href="index.html" class="nav-link">Repro</a>
+  <a href="#" class="nav-link active">GYN Infections</a>
+</div>
+
+<div class="header">
+  <p class="header-sub">Bone Wizardry &mdash; Reproductive</p>
+  <h1>The Discharge Detective</h1>
+  <p class="header-desc">You saw clue cells and thought Trich. Reasonable mistake. Let's make sure it never happens again.</p>
+</div>
+
+<!-- ==================== SECTION 1: THE LINEUP ==================== -->
+<p class="section-label">Section 1</p>
+<p class="section-title" style="background: linear-gradient(135deg, #ec4899, #f59e0b); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">The Lineup</p>
+<p class="section-sub">Tap a card to flip it and read the backstory. Know your villains.</p>
+
+<div class="lineup">
+
+  <!-- BV -->
+  <div class="villain-card" onclick="this.classList.toggle('flipped')" style="--vc: #3b82f6">
+    <div class="villain-inner">
+      <div class="villain-front">
+        <span class="v-badge badge-no-sti">NOT an STI</span>
+        <div class="v-avatar">&#129440;</div>
+        <div class="v-name" style="color: #3b82f6">Bacterial Vaginosis</div>
+        <div class="v-organism">Gardnerella vaginalis</div>
+        <div class="v-stat">
+          <span class="v-stat-label">Weapon</span>
+          <span class="v-stat-value" style="color: #94a3b8">Thin, gray, <span class="hl hl-yellow">fishy</span> discharge</span>
+        </div>
+        <div class="v-stat">
+          <span class="v-stat-label">pH</span>
+          <span class="v-stat-value"><span class="ph-bar" data-ph="5.0" data-label="> 4.5"></span></span>
+        </div>
+        <div class="v-stat">
+          <span class="v-stat-label">Whiff Test</span>
+          <span class="v-stat-value" style="color: #fca5a5">Positive &#128168;</span>
+        </div>
+        <div class="v-stat">
+          <span class="v-stat-label">Treatment</span>
+          <span class="v-stat-value"><span class="hl hl-pink">Metronidazole</span></span>
+        </div>
+        <div class="v-hallmark">&#128270; CLUE CELLS</div>
+        <span class="v-flip-hint">tap to flip &rarr;</span>
+      </div>
+      <div class="villain-back">
+        <div class="v-back-title" style="color: #3b82f6">Why BV Happens</div>
+        <div class="v-back-section">
+          <div class="v-back-label">The Bouncer Analogy</div>
+          <div class="v-back-text">
+            <span class="hl hl-purple">Lactobacillus</span> is the bouncer of the vagina. It makes lactic acid, keeping pH low (~4.0) and bad bacteria out.
+          </div>
+        </div>
+        <div class="v-back-section">
+          <div class="v-back-label">What Goes Wrong</div>
+          <div class="v-back-text">
+            BV = the bouncer left. Gardnerella and other <span class="tip">anaerobes<span class="tip-text">Bacteria that thrive without oxygen. They produce amines (fishy smell) as metabolic byproducts.</span></span> move in. Without Lactobacillus, pH rises above 4.5.
+          </div>
+        </div>
+        <div class="v-back-section">
+          <div class="v-back-label">Why Clue Cells?</div>
+          <div class="v-back-text">
+            Gardnerella literally <span class="hl hl-yellow">coats the surface</span> of vaginal epithelial cells. The cell edges look "stippled" or blurred because they're covered in bacteria. That's a clue cell.
+          </div>
+          <figure class="med-img">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/f/fc/Clue_cells_in_bacterial_vaginosis.jpg" alt="Clue cells — bacteria coating vaginal epithelial cells" loading="lazy">
+            <figcaption>
+              <span class="img-callout">See the blurry, stippled edges? That's Gardnerella coating the cell surface.</span>
+              Clue cells in BV. Dr Graham Beards, CC BY-SA 4.0. <a href="https://commons.wikimedia.org/wiki/File:Clue_cells_in_bacterial_vaginosis.jpg" target="_blank">Source</a>
+            </figcaption>
+          </figure>
+        </div>
+        <div class="v-back-section">
+          <div class="v-back-label">Why Metronidazole?</div>
+          <div class="v-back-text">
+            Metro kills <span class="hl hl-purple">anaerobes</span> by entering the cell and damaging their DNA. It's activated inside anaerobic organisms &mdash; so it selectively destroys the overgrowth without nuking everything.
+          </div>
+        </div>
+        <div class="v-back-section">
+          <div class="v-back-label">NOT an STI</div>
+          <div class="v-back-text">
+            BV is a <span class="hl hl-blue">flora shift</span>, not an infection someone gives you. No partner treatment needed. Risk factors: douching, new partners (disrupt flora), antibiotics.
+          </div>
+        </div>
+        <span class="v-flip-hint">tap to flip back &rarr;</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Trich -->
+  <div class="villain-card" onclick="this.classList.toggle('flipped')" style="--vc: #22c55e">
+    <div class="villain-inner">
+      <div class="villain-front">
+        <span class="v-badge badge-sti">STI &#9888;</span>
+        <div class="v-avatar">&#129440;</div>
+        <div class="v-name" style="color: #22c55e">Trichomoniasis</div>
+        <div class="v-organism">Trichomonas vaginalis</div>
+        <div class="v-stat">
+          <span class="v-stat-label">Weapon</span>
+          <span class="v-stat-value" style="color: #86efac">Green-yellow, <span class="hl hl-yellow">frothy</span></span>
+        </div>
+        <div class="v-stat">
+          <span class="v-stat-label">pH</span>
+          <span class="v-stat-value"><span class="ph-bar" data-ph="5.5" data-label="> 4.5"></span></span>
+        </div>
+        <div class="v-stat">
+          <span class="v-stat-label">Classic Sign</span>
+          <span class="v-stat-value" style="color: #fca5a5">Strawberry cervix &#127827;</span>
+        </div>
+        <div class="v-stat">
+          <span class="v-stat-label">Treatment</span>
+          <span class="v-stat-value"><span class="hl hl-pink">Metro + TREAT PARTNER</span></span>
+        </div>
+        <div class="v-hallmark">&#128270; MOTILE TRICHOMONADS</div>
+        <span class="v-flip-hint">tap to flip &rarr;</span>
+      </div>
+      <div class="villain-back">
+        <div class="v-back-title" style="color: #22c55e">Why Trich Is Different</div>
+        <div class="v-back-section">
+          <div class="v-back-label">Not Bacteria</div>
+          <div class="v-back-text">
+            Trich is a <span class="hl hl-purple">flagellated protozoan</span> &mdash; a single-celled organism with a tail. It's an actual parasite, not a bacterial overgrowth. That's why it's an STI.
+          </div>
+        </div>
+        <div class="v-back-section">
+          <div class="v-back-label">Why It Looks Different on Microscopy</div>
+          <div class="v-back-text">
+            On wet mount, you see <span class="hl hl-yellow">pear-shaped organisms darting around</span> with visible flagella. They're MOVING. Clue cells don't move &mdash; they're just epithelial cells with stuff stuck to them.
+          </div>
+          <figure class="med-img">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/2/27/Trichomonas_vaginalis_phase_contrast_microscopy.jpg" alt="Trichomonas vaginalis — pear-shaped flagellated protozoan" loading="lazy">
+            <figcaption>
+              <span class="img-callout">See the pear shape and the tail (flagellum)? These dart around the slide — they MOVE.</span>
+              T. vaginalis, phase contrast. Dr Graham Beards, CC BY-SA 3.0. <a href="https://commons.wikimedia.org/wiki/File:Trichomonas_vaginalis_phase_contrast_microscopy.jpg" target="_blank">Source</a>
+            </figcaption>
+          </figure>
+        </div>
+        <div class="v-back-section">
+          <div class="v-back-label">Strawberry Cervix</div>
+          <div class="v-back-text">
+            The organisms cause intense <span class="tip">inflammation<span class="tip-text">The immune response creates tiny areas of bleeding (petechiae) on the cervix, making it look like a strawberry.</span></span> &rarr; punctate hemorrhages on the cervix. Looks like someone flicked red paint at it.
+          </div>
+        </div>
+        <div class="v-back-section">
+          <div class="v-back-label">Why TREAT THE PARTNER?</div>
+          <div class="v-back-text">
+            Because it's sexually transmitted. If only one person is treated, they get <span class="hl hl-red">reinfected</span> immediately. Men are often asymptomatic carriers.
+          </div>
+        </div>
+        <div class="v-back-section">
+          <div class="v-back-label">Same Drug, Different Reason</div>
+          <div class="v-back-text">
+            Metronidazole also kills Trich because it's activated in <span class="hl hl-purple">anaerobic/microaerophilic</span> organisms. Trich happens to be one. But you MUST also treat the partner &mdash; that's the key difference from BV.
+          </div>
+        </div>
+        <span class="v-flip-hint">tap to flip back &rarr;</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Candida -->
+  <div class="villain-card" onclick="this.classList.toggle('flipped')" style="--vc: #a855f7">
+    <div class="villain-inner">
+      <div class="villain-front">
+        <span class="v-badge badge-no-sti">NOT an STI</span>
+        <div class="v-avatar">&#127812;</div>
+        <div class="v-name" style="color: #a855f7">Candidiasis</div>
+        <div class="v-organism">Candida albicans</div>
+        <div class="v-stat">
+          <span class="v-stat-label">Weapon</span>
+          <span class="v-stat-value" style="color: #c4b5fd">Thick, white, <span class="hl hl-yellow">cottage cheese</span></span>
+        </div>
+        <div class="v-stat">
+          <span class="v-stat-label">pH</span>
+          <span class="v-stat-value"><span class="ph-bar" data-ph="4.0" data-label="< 4.5 NORMAL"></span></span>
+        </div>
+        <div class="v-stat">
+          <span class="v-stat-label">Key Symptom</span>
+          <span class="v-stat-value" style="color: #fca5a5">INTENSE ITCHING &#128293;</span>
+        </div>
+        <div class="v-stat">
+          <span class="v-stat-label">Treatment</span>
+          <span class="v-stat-value"><span class="hl hl-pink">Fluconazole</span></span>
+        </div>
+        <div class="v-hallmark">&#128270; PSEUDOHYPHAE + BUDDING YEAST</div>
+        <span class="v-flip-hint">tap to flip &rarr;</span>
+      </div>
+      <div class="villain-back">
+        <div class="v-back-title" style="color: #a855f7">Why Candida Is the Odd One Out</div>
+        <div class="v-back-section">
+          <div class="v-back-label">It's a Fungus</div>
+          <div class="v-back-text">
+            Not bacteria, not a protozoan &mdash; <span class="hl hl-purple">yeast</span>. It's already in the vagina normally. It only causes problems when something lets it overgrow.
+          </div>
+        </div>
+        <div class="v-back-section">
+          <div class="v-back-label">THE Key Differentiator</div>
+          <div class="v-back-text">
+            pH is <span class="hl hl-blue">NORMAL (&lt; 4.5)</span>. This is the single biggest board distinguisher. If pH is elevated, it's NOT candida. If pH is normal, it IS candida.
+          </div>
+        </div>
+        <div class="v-back-section">
+          <div class="v-back-label">Why KOH Prep?</div>
+          <div class="v-back-text">
+            KOH (potassium hydroxide) <span class="tip">lyses<span class="tip-text">Dissolves/destroys the cell membranes of human cells and bacteria, leaving only the tough fungal cell walls visible.</span></span> everything except fungi. So you add KOH to the slide and the <span class="hl hl-yellow">pseudohyphae</span> (branching filaments) stand out clearly.
+          </div>
+          <figure class="med-img">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/6/66/Candida_with_pseudohyphae.jpg" alt="Candida albicans with pseudohyphae on microscopy" loading="lazy">
+            <figcaption>
+              <span class="img-callout">See the branching filaments? Those are pseudohyphae — Candida's signature under the scope.</span>
+              Candida with pseudohyphae. Microrao, CC BY-SA 4.0. <a href="https://commons.wikimedia.org/wiki/File:Candida_with_pseudohyphae.jpg" target="_blank">Source</a>
+            </figcaption>
+          </figure>
+        </div>
+        <div class="v-back-section">
+          <div class="v-back-label">Why Fluconazole (Not Metro)?</div>
+          <div class="v-back-text">
+            Metro kills anaerobes. Candida is a fungus. You need an <span class="hl hl-pink">azole</span> &mdash; it blocks <span class="tip">ergosterol<span class="tip-text">A lipid in fungal cell membranes (like cholesterol in human cells). Block it and the fungal membrane falls apart.</span></span> synthesis, destroying the fungal cell membrane.
+          </div>
+        </div>
+        <div class="v-back-section">
+          <div class="v-back-label">Risk Factors (Board Loves These)</div>
+          <div class="v-back-text">
+            Antibiotics (kill protective bacteria), <span class="hl hl-orange">diabetes</span> (glucose feeds yeast), pregnancy, immunosuppression (HIV, steroids). All let Candida overgrow.
+          </div>
+        </div>
+        <span class="v-flip-hint">tap to flip back &rarr;</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SECTION 2: SOLVE THE CASE ==================== -->
+<p class="section-label">Section 2</p>
+<p class="section-title" style="background: linear-gradient(135deg, #3b82f6, #22c55e); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Solve the Case</p>
+<p class="section-sub">Click through the decision tree. This is exactly how you'd think on test day.</p>
+
+<div class="flow-wrap" id="flowchart">
+
+  <div class="flow-node active" style="--fc: #64748b" id="flow-start">
+    <div class="flow-q">&#128105;&#8205;&#9877;&#65039; Patient presents with vaginal discharge</div>
+    <div class="flow-detail" style="max-height: 500px">
+      <p style="font-size: 0.75rem; color: #94a3b8; margin-bottom: 0.5rem;">First question: what's the pH?</p>
+    </div>
+  </div>
+
+  <div class="flow-arrow">&#8595;</div>
+
+  <div class="flow-branch" id="ph-branch">
+    <div class="flow-choice" style="--fc: #ef4444" onclick="selectPH('high')">
+      <div class="flow-choice-label">pH &gt; 4.5</div>
+      <div class="flow-choice-sub">Elevated &mdash; something disrupted normal flora</div>
+    </div>
+    <div class="flow-choice" style="--fc: #a855f7" onclick="selectPH('normal')">
+      <div class="flow-choice-label">pH &lt; 4.5</div>
+      <div class="flow-choice-sub">Normal &mdash; flora is intact</div>
+    </div>
+  </div>
+
+  <!-- Normal pH path = Candida -->
+  <div class="flow-result" id="result-candida" style="--fc: #a855f7">
+    <div class="flow-result-name">&#127812; Candidiasis</div>
+    <ul class="flow-result-facts">
+      <li>Normal pH = flora is intact = NOT bacterial</li>
+      <li>Confirm: KOH prep shows <span class="hl hl-yellow">pseudohyphae + budding yeast</span></li>
+      <li>Thick, white, cottage cheese discharge + intense itching</li>
+      <li>Treat: <span class="hl hl-pink">Fluconazole</span> (oral) or topical azole</li>
+      <li>NOT an STI &mdash; no partner treatment</li>
+    </ul>
+  </div>
+
+  <!-- High pH path: what's on the wet mount? -->
+  <div class="flow-node locked" id="flow-wetmount" style="--fc: #3b82f6">
+    <div class="flow-q">pH is elevated. What do you see on wet mount?</div>
+  </div>
+
+  <div class="flow-branch locked" id="wetmount-branch">
+    <div class="flow-choice" style="--fc: #3b82f6" onclick="selectWetMount('clue')">
+      <div class="flow-choice-label">Clue Cells</div>
+      <div class="flow-choice-sub">Epithelial cells coated with bacteria, stippled edges</div>
+    </div>
+    <div class="flow-choice" style="--fc: #22c55e" onclick="selectWetMount('motile')">
+      <div class="flow-choice-label">Motile Organisms</div>
+      <div class="flow-choice-sub">Pear-shaped, flagellated, darting around</div>
+    </div>
+  </div>
+
+  <!-- BV result -->
+  <div class="flow-result" id="result-bv" style="--fc: #3b82f6">
+    <div class="flow-result-name">&#129440; Bacterial Vaginosis</div>
+    <ul class="flow-result-facts">
+      <li><span class="hl hl-yellow">Clue cells</span> = bacteria stuck TO the epithelial cell</li>
+      <li>Thin, gray discharge + fishy smell</li>
+      <li>Whiff test positive (KOH releases amines)</li>
+      <li>Treat: <span class="hl hl-pink">Metronidazole</span></li>
+      <li>NOT an STI &mdash; no partner treatment</li>
+    </ul>
+  </div>
+
+  <!-- Trich result -->
+  <div class="flow-result" id="result-trich" style="--fc: #22c55e">
+    <div class="flow-result-name">&#129440; Trichomoniasis</div>
+    <ul class="flow-result-facts">
+      <li><span class="hl hl-yellow">Motile trichomonads</span> = separate organisms swimming around</li>
+      <li>Green-yellow, frothy discharge</li>
+      <li>Strawberry cervix (punctate hemorrhages)</li>
+      <li>Treat: <span class="hl hl-pink">Metronidazole + TREAT PARTNER</span></li>
+      <li>IS an STI &mdash; partner treatment REQUIRED</li>
+    </ul>
+  </div>
+
+</div>
+
+<!-- Master comparison table -->
+<div style="max-width: 44rem; margin: 2rem auto;">
+  <table class="mini-table">
+    <thead>
+      <tr><th></th><th style="color: #3b82f6">BV</th><th style="color: #22c55e">Trich</th><th style="color: #a855f7">Candida</th></tr>
+    </thead>
+    <tbody>
+      <tr><td style="font-weight:700; color:#64748b">Organism</td><td>Gardnerella</td><td>T. vaginalis</td><td>C. albicans</td></tr>
+      <tr><td style="font-weight:700; color:#64748b">Type</td><td>Bacteria (overgrowth)</td><td>Protozoan (parasite)</td><td>Fungus (yeast)</td></tr>
+      <tr><td style="font-weight:700; color:#64748b">Discharge</td><td>Thin, gray, fishy</td><td>Green, frothy</td><td>Thick, white, cottage cheese</td></tr>
+      <tr><td style="font-weight:700; color:#64748b">pH</td><td><span class="hl hl-red">&gt; 4.5</span></td><td><span class="hl hl-red">&gt; 4.5</span></td><td><span class="hl hl-blue">&lt; 4.5 (normal)</span></td></tr>
+      <tr><td style="font-weight:700; color:#64748b">Microscopy</td><td><span class="hl hl-yellow">Clue cells</span></td><td><span class="hl hl-yellow">Motile trichomonads</span></td><td><span class="hl hl-yellow">Pseudohyphae</span></td></tr>
+      <tr><td style="font-weight:700; color:#64748b">Whiff Test</td><td>Positive</td><td>Can be +</td><td>Negative</td></tr>
+      <tr><td style="font-weight:700; color:#64748b">STI?</td><td><span class="hl hl-green">No</span></td><td><span class="hl hl-red">YES</span></td><td><span class="hl hl-green">No</span></td></tr>
+      <tr><td style="font-weight:700; color:#64748b">Treatment</td><td><span class="hl hl-pink">Metronidazole</span></td><td><span class="hl hl-pink">Metro + partner</span></td><td><span class="hl hl-pink">Fluconazole</span></td></tr>
+      <tr><td style="font-weight:700; color:#64748b">Key Symptom</td><td>Fishy smell</td><td>Strawberry cervix</td><td>ITCHING</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ==================== SECTION 3: BOARD EXAM GAUNTLET ==================== -->
+<p class="section-label">Section 3</p>
+<p class="section-title" style="background: linear-gradient(135deg, #f59e0b, #ef4444); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Board Exam Gauntlet</p>
+<p class="section-sub">4 vignettes. Get them right and the confetti flies.</p>
+
+<div class="quiz-wrap">
+  <div class="quiz-score">Score: <span id="score">0</span> / <span id="total">4</span></div>
+
+  <!-- Q1 -->
+  <div class="quiz-q" id="q1">
+    <div class="quiz-q-num">Question 1 of 4</div>
+    <div class="quiz-q-text">A 28-year-old woman presents with a thin, grayish-white vaginal discharge with a fishy odor. Vaginal pH is 5.0. Wet mount shows epithelial cells with stippled borders. What is the most likely diagnosis?</div>
+    <div class="quiz-options">
+      <div class="quiz-opt" onclick="answer(this,'q1','wrong','Trich would show motile organisms on wet mount, not clue cells. Clue cells = bacteria stuck to cells, not swimming parasites.')">
+        <span class="quiz-opt-letter">A.</span><span class="quiz-opt-text">Trichomoniasis</span>
+      </div>
+      <div class="quiz-opt" onclick="answer(this,'q1','correct','Clue cells (stippled epithelial cells) + elevated pH + thin gray fishy discharge = classic BV. The whiff test would also be positive.')">
+        <span class="quiz-opt-letter">B.</span><span class="quiz-opt-text">Bacterial vaginosis</span>
+      </div>
+      <div class="quiz-opt" onclick="answer(this,'q1','wrong','Candida has NORMAL pH (< 4.5). This patient has pH 5.0. Also, candida shows pseudohyphae, not clue cells.')">
+        <span class="quiz-opt-letter">C.</span><span class="quiz-opt-text">Vulvovaginal candidiasis</span>
+      </div>
+      <div class="quiz-opt" onclick="answer(this,'q1','wrong','Chlamydia wouldn\'t show clue cells on wet mount. You\'d need a NAAT test to diagnose it, not microscopy.')">
+        <span class="quiz-opt-letter">D.</span><span class="quiz-opt-text">Chlamydia cervicitis</span>
+      </div>
+    </div>
+    <div class="quiz-explain" id="q1-explain"></div>
+  </div>
+
+  <!-- Q2 -->
+  <div class="quiz-q" id="q2">
+    <div class="quiz-q-num">Question 2 of 4</div>
+    <div class="quiz-q-text">A 32-year-old woman presents with intense vulvar pruritus and a thick, white, non-odorous discharge. Vaginal pH is 4.2. KOH prep shows branching filaments. What is the most appropriate treatment?</div>
+    <div class="quiz-options">
+      <div class="quiz-opt" onclick="answer(this,'q2','wrong','Metronidazole kills anaerobic bacteria and protozoa. Candida is a FUNGUS — metro won\'t touch it. You need an antifungal.')">
+        <span class="quiz-opt-letter">A.</span><span class="quiz-opt-text">Metronidazole</span>
+      </div>
+      <div class="quiz-opt" onclick="answer(this,'q2','wrong','Azithromycin is for Chlamydia. This is clearly a yeast infection — normal pH, pseudohyphae on KOH, cottage cheese discharge, itching.')">
+        <span class="quiz-opt-letter">B.</span><span class="quiz-opt-text">Azithromycin</span>
+      </div>
+      <div class="quiz-opt" onclick="answer(this,'q2','correct','Normal pH + pseudohyphae (branching filaments) on KOH + itching + thick white discharge = Candida. Fluconazole (an azole antifungal) blocks ergosterol synthesis in the fungal membrane.')">
+        <span class="quiz-opt-letter">C.</span><span class="quiz-opt-text">Fluconazole</span>
+      </div>
+      <div class="quiz-opt" onclick="answer(this,'q2','wrong','Doxycycline is for bacterial STIs (Chlamydia, PID). This is a fungal infection — antibiotics would actually make it WORSE by killing protective bacteria.')">
+        <span class="quiz-opt-letter">D.</span><span class="quiz-opt-text">Doxycycline</span>
+      </div>
+    </div>
+    <div class="quiz-explain" id="q2-explain"></div>
+  </div>
+
+  <!-- Q3 -->
+  <div class="quiz-q" id="q3">
+    <div class="quiz-q-num">Question 3 of 4</div>
+    <div class="quiz-q-text">A 25-year-old sexually active woman presents with a malodorous, green-yellow, frothy vaginal discharge. Speculum exam reveals punctate hemorrhages on the cervix. Wet mount shows motile, pear-shaped organisms. Which is TRUE about this condition?</div>
+    <div class="quiz-options">
+      <div class="quiz-opt" onclick="answer(this,'q3','wrong','This is Trich, which IS an STI. BV is the one that\'s not an STI — it\'s just an overgrowth. This question is testing whether you know the difference.')">
+        <span class="quiz-opt-letter">A.</span><span class="quiz-opt-text">It is not sexually transmitted</span>
+      </div>
+      <div class="quiz-opt" onclick="answer(this,'q3','wrong','KOH prep is for Candida (shows pseudohyphae). Trich is diagnosed on WET MOUNT — you see the motile trichomonads directly. KOH would destroy them.')">
+        <span class="quiz-opt-letter">B.</span><span class="quiz-opt-text">KOH prep is the diagnostic test</span>
+      </div>
+      <div class="quiz-opt" onclick="answer(this,'q3','correct','Trich IS an STI caused by T. vaginalis (a protozoan). Both the patient AND partner must be treated with metronidazole — otherwise she gets reinfected from the asymptomatic partner.')">
+        <span class="quiz-opt-letter">C.</span><span class="quiz-opt-text">Sexual partners should be treated</span>
+      </div>
+      <div class="quiz-opt" onclick="answer(this,'q3','wrong','Fluconazole is for Candida (fungal). This is Trich (protozoan). The treatment is metronidazole — same drug as BV, but with partner treatment added.')">
+        <span class="quiz-opt-letter">D.</span><span class="quiz-opt-text">Fluconazole is first-line treatment</span>
+      </div>
+    </div>
+    <div class="quiz-explain" id="q3-explain"></div>
+  </div>
+
+  <!-- Q4: THE TRAP QUESTION -->
+  <div class="quiz-q" id="q4">
+    <div class="quiz-q-num">Question 4 of 4 &mdash; The Trap</div>
+    <div class="quiz-q-text">A 30-year-old woman is treated with metronidazole for a vaginal infection. Two weeks later, she returns with the same symptoms. What is the most likely explanation?</div>
+    <div class="quiz-options">
+      <div class="quiz-opt" onclick="answer(this,'q4','wrong','Metronidazole resistance in BV and Trich is rare. Reinfection is FAR more common than resistance, especially if it\'s Trich and the partner wasn\'t treated.')">
+        <span class="quiz-opt-letter">A.</span><span class="quiz-opt-text">Antibiotic resistance</span>
+      </div>
+      <div class="quiz-opt" onclick="answer(this,'q4','correct','If she had Trich and only SHE was treated, her partner (often asymptomatic) reinfected her. This is the classic board trap: both BV and Trich use metro, but only Trich needs partner treatment.')">
+        <span class="quiz-opt-letter">B.</span><span class="quiz-opt-text">Untreated sexual partner</span>
+      </div>
+      <div class="quiz-opt" onclick="answer(this,'q4','wrong','She already got the RIGHT drug (metro). The problem isn\'t the drug choice — it\'s that the source of reinfection (the partner) wasn\'t addressed.')">
+        <span class="quiz-opt-letter">C.</span><span class="quiz-opt-text">Wrong antibiotic was prescribed</span>
+      </div>
+      <div class="quiz-opt" onclick="answer(this,'q4','wrong','There\'s no indication of immunodeficiency here. The timeline (2 weeks, same symptoms) points to reinfection from an untreated partner, not an underlying immune issue.')">
+        <span class="quiz-opt-letter">D.</span><span class="quiz-opt-text">Underlying immunodeficiency</span>
+      </div>
+    </div>
+    <div class="quiz-explain" id="q4-explain"></div>
+  </div>
+</div>
+
+<!-- Board Traps -->
+<div style="max-width: 44rem; margin: 2rem auto;">
+  <p class="section-label">Don't Fall For These</p>
+
+  <div class="trap-box">
+    <span class="trap-icon">&#9888;&#65039;</span>
+    <div class="trap-title">Trap #1: Same Drug, Different Rules</div>
+    <div class="trap-text">Both BV and Trich use metronidazole. But only <span class="hl hl-red">Trich requires partner treatment</span>. If you see "treated with metro, returns with symptoms" &mdash; think untreated partner = Trich.</div>
+  </div>
+
+  <div class="trap-box">
+    <span class="trap-icon">&#9888;&#65039;</span>
+    <div class="trap-title">Trap #2: Clue Cells &#8800; Trichomonads</div>
+    <div class="trap-text">Clue cells are <span class="hl hl-blue">epithelial cells coated with bacteria</span> (they don't move). Trichomonads are <span class="hl hl-green">separate organisms that swim</span>. If it moves, it's Trich. If it's stuck to a cell, it's BV.</div>
+  </div>
+
+  <div class="trap-box">
+    <span class="trap-icon">&#9888;&#65039;</span>
+    <div class="trap-title">Trap #3: pH Is the Fastest Differentiator</div>
+    <div class="trap-text">Normal pH (&lt; 4.5) = <span class="hl hl-purple">Candida</span>. Period. Don't even think about BV or Trich if pH is normal. This alone eliminates one-third of the differential.</div>
+  </div>
+
+  <div class="trap-box">
+    <span class="trap-icon">&#9888;&#65039;</span>
+    <div class="trap-title">Trap #4: Antibiotics CAUSE Candida</div>
+    <div class="trap-text">If a question says "patient was on antibiotics, now has vaginal itching + white discharge" &mdash; that's <span class="hl hl-purple">candida</span>. The antibiotics killed protective bacteria, letting yeast overgrow. Don't pick BV.</div>
+  </div>
+</div>
+
+<p class="footer">Bone Wizardry &mdash; Reproductive</p>
+
+<script>
+// Tooltip tap-to-toggle (mobile)
+document.querySelectorAll('.tip').forEach(t => {
+  t.addEventListener('click', e => {
+    e.stopPropagation();
+    document.querySelectorAll('.tip.active').forEach(a => { if (a !== t) a.classList.remove('active'); });
+    t.classList.toggle('active');
+  });
+});
+document.addEventListener('click', () => document.querySelectorAll('.tip.active').forEach(t => t.classList.remove('active')));
+
+// pH bars
+document.querySelectorAll('.ph-bar').forEach((bar, i) => {
+  const ph = parseFloat(bar.dataset.ph);
+  const label = bar.dataset.label || '';
+  const w = 80, h = 14;
+  const x = (ph / 14) * w;
+  const color = ph < 5.5 ? '#ef4444' : ph < 7 ? '#f59e0b' : ph < 8 ? '#22c55e' : '#3b82f6';
+  const gid = 'phg' + i;
+  bar.innerHTML = `
+    <svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
+      <defs><linearGradient id="${gid}"><stop offset="0%" stop-color="#ef4444"/><stop offset="50%" stop-color="#22c55e"/><stop offset="100%" stop-color="#3b82f6"/></linearGradient></defs>
+      <rect x="0" y="3" width="${w}" height="8" rx="4" fill="url(#${gid})" opacity="0.3"/>
+      <circle cx="${x}" cy="7" r="4" fill="${color}" stroke="#fff" stroke-width="1"/>
+      <text x="${x}" y="2" text-anchor="middle" fill="${color}" font-size="5" font-weight="800" font-family="monospace">${ph}</text>
+    </svg>
+    <span class="ph-label" style="color:${color}">${label}</span>`;
+});
+
+// Flowchart logic
+function selectPH(choice) {
+  document.querySelectorAll('#ph-branch .flow-choice').forEach(c => c.classList.remove('selected'));
+  if (choice === 'normal') {
+    document.querySelector('#ph-branch .flow-choice:nth-child(2)').classList.add('selected');
+    document.getElementById('result-candida').classList.add('show');
+    document.getElementById('result-bv').classList.remove('show');
+    document.getElementById('result-trich').classList.remove('show');
+    document.getElementById('flow-wetmount').classList.add('locked');
+    document.getElementById('wetmount-branch').classList.add('locked');
+  } else {
+    document.querySelector('#ph-branch .flow-choice:nth-child(1)').classList.add('selected');
+    document.getElementById('result-candida').classList.remove('show');
+    document.getElementById('flow-wetmount').classList.remove('locked');
+    document.getElementById('flow-wetmount').classList.add('active');
+    document.getElementById('wetmount-branch').classList.remove('locked');
+  }
+}
+
+function selectWetMount(choice) {
+  document.querySelectorAll('#wetmount-branch .flow-choice').forEach(c => c.classList.remove('selected'));
+  if (choice === 'clue') {
+    document.querySelector('#wetmount-branch .flow-choice:nth-child(1)').classList.add('selected');
+    document.getElementById('result-bv').classList.add('show');
+    document.getElementById('result-trich').classList.remove('show');
+  } else {
+    document.querySelector('#wetmount-branch .flow-choice:nth-child(2)').classList.add('selected');
+    document.getElementById('result-trich').classList.add('show');
+    document.getElementById('result-bv').classList.remove('show');
+  }
+}
+
+// Quiz logic
+let score = 0;
+const answered = {};
+
+function answer(el, qid, result, explanation) {
+  if (answered[qid]) return;
+  answered[qid] = true;
+
+  const opts = el.parentElement.querySelectorAll('.quiz-opt');
+  opts.forEach(o => o.classList.add('answered'));
+
+  if (result === 'correct') {
+    el.classList.add('correct');
+    score++;
+    document.getElementById('score').textContent = score;
+    // Check if all correct
+    if (score === 4) setTimeout(fireConfetti, 300);
+  } else {
+    el.classList.add('wrong');
+    // Highlight correct
+    opts.forEach(o => {
+      if (o.getAttribute('onclick').includes("'correct'")) o.classList.add('correct');
+    });
+  }
+
+  const expEl = document.getElementById(qid + '-explain');
+  expEl.textContent = explanation;
+  expEl.classList.add('show', result === 'correct' ? 'right' : 'wrong-exp');
+}
+
+// Confetti
+function fireConfetti() {
+  const canvas = document.getElementById('confetti');
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  const pieces = [];
+  const colors = ['#ec4899', '#a855f7', '#3b82f6', '#22c55e', '#f59e0b', '#ef4444'];
+  for (let i = 0; i < 150; i++) {
+    pieces.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height - canvas.height,
+      w: Math.random() * 8 + 4,
+      h: Math.random() * 6 + 2,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      vx: (Math.random() - 0.5) * 4,
+      vy: Math.random() * 3 + 2,
+      rot: Math.random() * 360,
+      rotV: (Math.random() - 0.5) * 10
+    });
+  }
+
+  let frame = 0;
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    pieces.forEach(p => {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.rot += p.rotV;
+      p.vy += 0.05;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot * Math.PI / 180);
+      ctx.fillStyle = p.color;
+      ctx.globalAlpha = Math.max(0, 1 - frame / 120);
+      ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+      ctx.restore();
+    });
+    frame++;
+    if (frame < 120) requestAnimationFrame(draw);
+    else ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+  draw();
+}
+</script>
+</body>
+</html>

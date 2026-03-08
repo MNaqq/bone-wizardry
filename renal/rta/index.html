@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RTA Portal — Bone Wizardry</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'JetBrains Mono', monospace;
+    background: linear-gradient(180deg, #020617 0%, #0f172a 100%);
+    color: #e2e8f0;
+    min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 2rem 1rem;
+  }
+
+  .header { text-align: center; margin-bottom: 3rem; }
+  .header-sub { color: #64748b; font-size: 0.7rem; letter-spacing: 0.5em; text-transform: uppercase; margin-bottom: 0.75rem; }
+  .header h1 {
+    font-size: 2.5rem; font-weight: 900;
+    background: linear-gradient(135deg, #a855f7, #3b82f6, #22c55e, #eab308);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    margin-bottom: 0.5rem;
+  }
+  .header-desc { color: #64748b; font-size: 0.8rem; }
+
+  .portal-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.25rem; max-width: 48rem; width: 100%;
+  }
+
+  .portal-card {
+    border: 2px solid #1e293b; border-radius: 1.25rem; padding: 1.75rem;
+    background: #0f172a; transition: all 0.35s; cursor: pointer;
+    text-decoration: none; color: inherit; display: block;
+    position: relative; overflow: hidden;
+  }
+  .portal-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: var(--accent); opacity: 0; transition: opacity 0.3s;
+  }
+  .portal-card:hover {
+    border-color: var(--accent); transform: translateY(-4px);
+    box-shadow: 0 12px 40px color-mix(in srgb, var(--accent) 15%, transparent);
+  }
+  .portal-card:hover::before { opacity: 1; }
+
+  .card-icon { font-size: 2rem; margin-bottom: 1rem; }
+  .card-title { font-weight: 800; font-size: 1.1rem; margin-bottom: 0.5rem; color: #f1f5f9; }
+  .card-desc { color: #64748b; font-size: 0.8rem; line-height: 1.5; margin-bottom: 1rem; }
+  .card-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+  .tag {
+    padding: 0.2rem 0.6rem; border-radius: 9999px; font-size: 0.65rem; font-weight: 700;
+    letter-spacing: 0.05em;
+  }
+
+  .footer { text-align: center; color: #334155; font-size: 0.7rem; margin-top: 3rem; letter-spacing: 0.1em; }
+</style>
+</head>
+<body>
+
+<div style="display:flex;justify-content:center;gap:0.75rem;margin-bottom:2rem;flex-wrap:wrap">
+  <a href="/" style="padding:0.5rem 1rem;border-radius:0.75rem;font-size:0.75rem;font-weight:700;border:2px solid #334155;color:#94a3b8;text-decoration:none;font-family:inherit">Home</a>
+  <a href="../index.html" style="padding:0.5rem 1rem;border-radius:0.75rem;font-size:0.75rem;font-weight:700;border:2px solid #334155;color:#94a3b8;text-decoration:none;font-family:inherit">Renal</a>
+</div>
+
+<div class="header">
+  <p class="header-sub">Bone Wizardry — COMLEX Review</p>
+  <h1>COMLEX Review</h1>
+  <p class="header-desc">Tap a card to open. All links open right here.</p>
+</div>
+
+<div class="portal-grid">
+
+  <a href="rta-master-diagram.html" class="portal-card" style="--accent: #3b82f6">
+    <div class="card-icon">&#128736;</div>
+    <div class="card-title">RTA Assembly Line</div>
+    <div class="card-desc">Interactive visual diagram. See exactly where each RTA breaks the nephron. Tabs switch between Normal, Type 1, Type 2, and Type 4.</div>
+    <div class="card-tags">
+      <span class="tag" style="background:#3b82f620;color:#93c5fd;border:1px solid #3b82f644">Interactive</span>
+      <span class="tag" style="background:#22c55e20;color:#86efac;border:1px solid #22c55e44">Visual</span>
+      <span class="tag" style="background:#eab30820;color:#fde047;border:1px solid #eab30844">Labs</span>
+    </div>
+  </a>
+
+  <a href="rta-deep-dive.html" class="portal-card" style="--accent: #a855f7">
+    <div class="card-icon">&#128218;</div>
+    <div class="card-title">RTA Deep Dive</div>
+    <div class="card-desc">Bite-sized chunks you can expand one at a time. Clinical vignette, board traps, COMLEX speed-run cheat sheet. Every fact is highlightable.</div>
+    <div class="card-tags">
+      <span class="tag" style="background:#a855f720;color:#c4b5fd;border:1px solid #a855f744">Chunked</span>
+      <span class="tag" style="background:#ec489920;color:#f9a8d4;border:1px solid #ec489944">Vignette</span>
+      <span class="tag" style="background:#f59e0b20;color:#fcd34d;border:1px solid #f59e0b44">Board Tips</span>
+    </div>
+  </a>
+
+</div>
+
+<p class="footer">Built by the Brain. For Mo. &#128156;</p>
+
+</body>
+</html>

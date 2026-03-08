@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RTA Deep Dive — Mo's COMLEX Review</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'JetBrains Mono', monospace;
+    background: linear-gradient(180deg, #020617 0%, #0f172a 100%);
+    color: #e2e8f0;
+    min-height: 100vh;
+    padding: 2rem 1rem;
+    line-height: 1.6;
+  }
+  a { text-decoration: none; }
+
+  /* Nav */
+  .nav { display: flex; justify-content: center; gap: 0.75rem; margin-bottom: 2rem; flex-wrap: wrap; }
+  .nav-link {
+    padding: 0.5rem 1rem; border-radius: 0.75rem; font-size: 0.75rem; font-weight: 700;
+    border: 2px solid #334155; color: #94a3b8; transition: all 0.3s; cursor: pointer;
+    font-family: inherit;
+  }
+  .nav-link:hover { border-color: #3b82f6; color: #3b82f6; background: #3b82f610; }
+  .nav-link.active { border-color: #a855f7; color: #a855f7; background: #a855f710; }
+
+  .header { text-align: center; margin-bottom: 2rem; }
+  .header-sub { color: #64748b; font-size: 0.7rem; letter-spacing: 0.4em; text-transform: uppercase; margin-bottom: 0.5rem; }
+  .header h1 {
+    font-size: 2rem; font-weight: 900;
+    background: linear-gradient(135deg, #a855f7, #3b82f6, #22c55e);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .header-desc { color: #64748b; font-size: 0.75rem; margin-top: 0.5rem; }
+
+  /* Chunk cards */
+  .chunks { max-width: 48rem; margin: 0 auto; }
+  .chunk {
+    border: 2px solid #1e293b; border-radius: 1rem; padding: 1.5rem; margin-bottom: 1.25rem;
+    background: #0f172a; transition: all 0.3s; cursor: pointer; position: relative;
+    overflow: hidden;
+  }
+  .chunk:hover { border-color: #334155; }
+  .chunk.open { border-color: var(--accent); box-shadow: 0 0 30px color-mix(in srgb, var(--accent) 15%, transparent); }
+  .chunk-header { display: flex; align-items: center; gap: 0.75rem; }
+  .chunk-num {
+    width: 2rem; height: 2rem; border-radius: 0.5rem; display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 0.8rem; color: #fff; flex-shrink: 0;
+  }
+  .chunk-title { font-weight: 700; font-size: 0.95rem; color: #f1f5f9; flex: 1; }
+  .chunk-toggle { color: #475569; font-size: 1.2rem; transition: transform 0.3s; }
+  .chunk.open .chunk-toggle { transform: rotate(180deg); }
+  .chunk-body { max-height: 0; overflow: hidden; transition: max-height 0.4s ease, padding 0.3s; }
+  .chunk.open .chunk-body { max-height: 2000px; padding-top: 1rem; }
+
+  /* Content styles */
+  .chunk-body p { color: #94a3b8; font-size: 0.85rem; margin-bottom: 0.75rem; }
+  .chunk-body .highlight {
+    display: inline; padding: 0.1rem 0.4rem; border-radius: 0.25rem; font-weight: 700;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .highlight:hover { filter: brightness(1.3); }
+  .hl-red { background: #ef444425; color: #fca5a5; border: 1px solid #ef444444; }
+  .hl-blue { background: #3b82f625; color: #93c5fd; border: 1px solid #3b82f644; }
+  .hl-yellow { background: #eab30825; color: #fde047; border: 1px solid #eab30844; }
+  .hl-green { background: #22c55e25; color: #86efac; border: 1px solid #22c55e44; }
+  .hl-purple { background: #a855f725; color: #c4b5fd; border: 1px solid #a855f744; }
+  .hl-orange { background: #f59e0b25; color: #fcd34d; border: 1px solid #f59e0b44; }
+  .hl-pink { background: #ec489925; color: #f9a8d4; border: 1px solid #ec489944; }
+
+  .key-fact {
+    padding: 0.75rem 1rem; border-radius: 0.75rem; margin: 0.75rem 0; font-size: 0.8rem;
+    font-weight: 600; display: flex; align-items: flex-start; gap: 0.5rem;
+  }
+  .key-fact .icon { font-size: 1rem; flex-shrink: 0; }
+
+  .mini-table { width: 100%; border-collapse: collapse; margin: 0.75rem 0; font-size: 0.75rem; }
+  .mini-table th {
+    padding: 0.6rem 0.75rem; text-align: left; font-weight: 700; font-size: 0.65rem;
+    letter-spacing: 0.1em; text-transform: uppercase; color: #64748b; background: #1e293b;
+  }
+  .mini-table td { padding: 0.6rem 0.75rem; border-bottom: 1px solid #1e293b; color: #cbd5e1; }
+  .mini-table tr:hover { background: #ffffff08; }
+
+  .mnemonic {
+    text-align: center; padding: 1rem; border-radius: 0.75rem; margin: 0.75rem 0;
+    font-weight: 800; font-size: 1.1rem; letter-spacing: 0.05em;
+  }
+
+  /* Answer explanations */
+  .answer-grid { display: grid; gap: 0.75rem; margin: 0.75rem 0; }
+  .answer-card {
+    padding: 1rem; border-radius: 0.75rem; border: 1px solid #1e293b; background: #0f172a;
+    transition: all 0.3s; cursor: pointer;
+  }
+  .answer-card:hover { border-color: #334155; }
+  .answer-card.correct { border-color: #22c55e44; background: #22c55e08; }
+  .answer-card.wrong { border-color: #ef444422; }
+  .answer-letter {
+    font-weight: 800; font-size: 0.8rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;
+  }
+  .answer-text { color: #94a3b8; font-size: 0.8rem; }
+
+  .footer { text-align: center; color: #334155; font-size: 0.7rem; margin-top: 2.5rem; letter-spacing: 0.1em; }
+
+  /* Tooltips */
+  .tip {
+    position: relative; cursor: help;
+    border-bottom: 1px dashed currentColor;
+  }
+  .tip .tip-text {
+    visibility: hidden; opacity: 0;
+    position: absolute; bottom: 125%; left: 50%; transform: translateX(-50%);
+    background: #1e293b; color: #e2e8f0; border: 1px solid #475569; border-radius: 0.5rem;
+    padding: 0.5rem 0.75rem; font-size: 0.7rem; font-weight: 400; line-height: 1.4;
+    width: max-content; max-width: 280px; z-index: 100;
+    transition: opacity 0.2s, visibility 0.2s;
+    box-shadow: 0 4px 20px #00000066;
+    pointer-events: none;
+  }
+  .tip .tip-text::after {
+    content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+    border: 6px solid transparent; border-top-color: #475569;
+  }
+  .tip:hover .tip-text, .tip:focus .tip-text, .tip.active .tip-text {
+    visibility: visible; opacity: 1;
+  }
+  @media (max-width: 600px) {
+    .tip .tip-text { left: 0; transform: none; max-width: 220px; }
+  }
+
+  /* pH bar */
+  .ph-bar {
+    display: inline-flex; align-items: center; gap: 0.4rem; cursor: help;
+    vertical-align: middle;
+  }
+  .ph-bar svg { flex-shrink: 0; }
+  .ph-label { font-size: 0.7rem; font-weight: 700; }
+
+  /* Nephron diagram */
+  .nephron-wrap { text-align: center; margin: 0.75rem 0; }
+  .nephron-btns { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem; margin-bottom: 1rem; }
+  .nephron-btn {
+    padding: 0.4rem 0.8rem; border-radius: 0.5rem; font-size: 0.7rem; font-weight: 700;
+    border: 2px solid #334155; background: transparent; color: #94a3b8;
+    cursor: pointer; transition: all 0.3s; font-family: inherit;
+  }
+  .nephron-btn.active { border-color: var(--c); color: var(--c); background: color-mix(in srgb, var(--c) 10%, transparent); }
+  .nephron-svg { max-width: 100%; height: auto; }
+  .nephron-seg { transition: all 0.4s; }
+  .nephron-seg.broken { animation: segPulse 1.5s infinite; }
+  @keyframes segPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <a href="index.html" class="nav-link">Portal</a>
+  <a href="rta-master-diagram.html" class="nav-link">Assembly Line</a>
+  <a href="rta-deep-dive.html" class="nav-link active">Deep Dive</a>
+</div>
+
+<div class="header">
+  <p class="header-sub">Mo's COMLEX Review</p>
+  <h1>RTA Deep Dive</h1>
+  <p class="header-desc">Bite-sized chunks. Tap to expand. Learn one piece at a time.</p>
+</div>
+
+<div class="chunks">
+
+  <!-- CHUNK 0: Nephron Flow -->
+  <div class="chunk" style="--accent: #06b6d4" onclick="event.target.closest('.nephron-btn') || this.classList.toggle('open')">
+    <div class="chunk-header">
+      <div class="chunk-num" style="background: #06b6d4">&#129516;</div>
+      <div class="chunk-title">The Nephron — Where Each RTA Breaks</div>
+      <div class="chunk-toggle">&#9660;</div>
+    </div>
+    <div class="chunk-body">
+      <p>Tap a type to see which segment breaks. Follow the flow left to right.</p>
+      <div class="nephron-btns">
+        <button class="nephron-btn active" style="--c:#22c55e" onclick="setNephron('normal')">Normal</button>
+        <button class="nephron-btn" style="--c:#f59e0b" onclick="setNephron('type2')">Type 2</button>
+        <button class="nephron-btn" style="--c:#ef4444" onclick="setNephron('type1')">Type 1</button>
+        <button class="nephron-btn" style="--c:#a855f7" onclick="setNephron('type4')">Type 4</button>
+      </div>
+      <div class="nephron-wrap">
+        <svg class="nephron-svg" viewBox="0 0 700 160" xmlns="http://www.w3.org/2000/svg">
+          <!-- Flow arrows -->
+          <defs>
+            <marker id="arr" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#475569"/></marker>
+          </defs>
+          <!-- Glomerulus -->
+          <rect id="seg-glom" class="nephron-seg" x="5" y="40" width="90" height="70" rx="12" fill="#1e293b" stroke="#22c55e" stroke-width="2"/>
+          <text x="50" y="68" text-anchor="middle" fill="#94a3b8" font-size="10" font-weight="700" font-family="monospace">GLOM</text>
+          <text x="50" y="84" text-anchor="middle" fill="#64748b" font-size="8" font-family="monospace">Filter</text>
+          <!-- Arrow -->
+          <line x1="100" y1="75" x2="130" y2="75" stroke="#475569" stroke-width="2" marker-end="url(#arr)"/>
+          <!-- Proximal Tubule -->
+          <rect id="seg-prox" class="nephron-seg" x="135" y="30" width="120" height="90" rx="12" fill="#1e293b" stroke="#22c55e" stroke-width="2"/>
+          <text x="195" y="58" text-anchor="middle" fill="#94a3b8" font-size="10" font-weight="700" font-family="monospace">PROXIMAL</text>
+          <text x="195" y="74" text-anchor="middle" fill="#64748b" font-size="8" font-family="monospace">Reabsorb HCO₃⁻</text>
+          <text x="195" y="88" text-anchor="middle" fill="#64748b" font-size="8" font-family="monospace">Make NH₃</text>
+          <text id="prox-status" x="195" y="106" text-anchor="middle" fill="#22c55e" font-size="9" font-weight="700" font-family="monospace">OK</text>
+          <!-- Arrow -->
+          <line x1="260" y1="75" x2="290" y2="75" stroke="#475569" stroke-width="2" marker-end="url(#arr)"/>
+          <!-- Loop of Henle -->
+          <rect id="seg-loop" class="nephron-seg" x="295" y="40" width="90" height="70" rx="12" fill="#1e293b" stroke="#22c55e" stroke-width="2"/>
+          <text x="340" y="68" text-anchor="middle" fill="#94a3b8" font-size="10" font-weight="700" font-family="monospace">LOOP</text>
+          <text x="340" y="84" text-anchor="middle" fill="#64748b" font-size="8" font-family="monospace">Concentrate</text>
+          <!-- Arrow -->
+          <line x1="390" y1="75" x2="420" y2="75" stroke="#475569" stroke-width="2" marker-end="url(#arr)"/>
+          <!-- Collecting Duct -->
+          <rect id="seg-cd" class="nephron-seg" x="425" y="30" width="130" height="90" rx="12" fill="#1e293b" stroke="#22c55e" stroke-width="2"/>
+          <text x="490" y="55" text-anchor="middle" fill="#94a3b8" font-size="10" font-weight="700" font-family="monospace">COLLECTING</text>
+          <text x="490" y="70" text-anchor="middle" fill="#94a3b8" font-size="10" font-weight="700" font-family="monospace">DUCT</text>
+          <text x="490" y="86" text-anchor="middle" fill="#64748b" font-size="8" font-family="monospace">Secrete H⁺ &amp; K⁺</text>
+          <text id="cd-status" x="490" y="106" text-anchor="middle" fill="#22c55e" font-size="9" font-weight="700" font-family="monospace">OK</text>
+          <!-- Arrow -->
+          <line x1="560" y1="75" x2="590" y2="75" stroke="#475569" stroke-width="2" marker-end="url(#arr)"/>
+          <!-- Urine -->
+          <rect id="seg-urine" class="nephron-seg" x="595" y="40" width="90" height="70" rx="12" fill="#1e293b" stroke="#22c55e" stroke-width="2"/>
+          <text x="640" y="65" text-anchor="middle" fill="#94a3b8" font-size="10" font-weight="700" font-family="monospace">URINE</text>
+          <text id="urine-ph" x="640" y="84" text-anchor="middle" fill="#22c55e" font-size="9" font-weight="700" font-family="monospace">pH 4.5-6</text>
+          <!-- Defect label -->
+          <text id="defect-label" x="350" y="150" text-anchor="middle" fill="#22c55e" font-size="11" font-weight="800" font-family="monospace">All segments working normally</text>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHUNK 1: The Big Picture -->
+  <div class="chunk" style="--accent: #3b82f6" onclick="this.classList.toggle('open')">
+    <div class="chunk-header">
+      <div class="chunk-num" style="background: #3b82f6">1</div>
+      <div class="chunk-title">The Big Picture: What Are RTAs?</div>
+      <div class="chunk-toggle">&#9660;</div>
+    </div>
+    <div class="chunk-body">
+      <p>All RTAs cause the <span class="highlight hl-red">same lab pattern</span>:</p>
+      <div class="mnemonic" style="background: #ef444415; border: 1px solid #ef444433; color: #fca5a5;">
+        <span class="tip">Hyperchloremic<span class="tip-text">Too much chloride (Cl⁻) in the blood. When bicarb drops, chloride rises to keep charges balanced.</span></span>
+        <span class="tip">Non-Anion Gap<span class="tip-text">Anion gap = Na⁺ - (Cl⁻ + HCO₃⁻). Normal is 8-12. In RTA, the gap stays normal because Cl⁻ rises as HCO₃⁻ drops — they swap.</span></span>
+        <span class="tip">Metabolic Acidosis<span class="tip-text">Blood is too acidic (low pH) due to a kidney problem, not a lung problem. The kidneys aren't handling acid/base properly.</span></span>
+      </div>
+      <p>That's your starting point. If you see <span class="highlight hl-green">high Cl⁻</span> + <span class="highlight hl-red">low <span class="tip">HCO₃⁻<span class="tip-text">Bicarbonate — the body's main base/buffer. The kidneys normally reabsorb it to keep blood pH balanced.</span></span></span> + <span class="highlight hl-blue">normal <span class="tip">anion gap<span class="tip-text">A calculation: Na⁺ minus (Cl⁻ + HCO₃⁻). If elevated, think lactic acidosis, ketoacidosis, toxins. If normal = RTA or diarrhea.</span></span></span> = think RTA.</p>
+      <p>Then use <span class="highlight hl-yellow">two questions</span> to figure out which type:</p>
+      <div class="key-fact" style="background: #eab30812; border: 1px solid #eab30833; color: #fde047;">
+        <span class="icon">1.</span> Is the patient <span class="highlight hl-yellow">hyperkalemic</span>? If YES = Type 4. Done.
+      </div>
+      <div class="key-fact" style="background: #3b82f612; border: 1px solid #3b82f633; color: #93c5fd;">
+        <span class="icon">2.</span> If hypokalemic: Is urine pH <span class="highlight hl-purple">> 5.5</span> (Type 1) or <span class="highlight hl-orange">< 5.5</span> (Type 2)?
+      </div>
+
+      <p style="font-weight: 700; color: #f1f5f9; margin-top: 1rem;">Wait — two different "anion gaps"?</p>
+      <p>Yes. Don't mix them up. They measure completely different things:</p>
+
+      <div class="key-fact" style="background: #3b82f612; border: 1px solid #3b82f633; color: #93c5fd;">
+        <span class="icon">&#129516;</span>
+        <span><strong>Serum Anion Gap</strong> = Na⁺ - (Cl⁻ + HCO₃⁻) in <em>blood</em>. Normal is 8-12. In ALL RTAs, this stays <span class="highlight hl-blue">normal</span> because when HCO₃⁻ drops, Cl⁻ rises to fill the gap — they swap. That's why it's called "non-anion gap" acidosis. If the serum AG is HIGH, it's NOT an RTA — think lactic acidosis, DKA, toxins instead.</span>
+      </div>
+      <div class="key-fact" style="background: #eab30812; border: 1px solid #eab30833; color: #fde047;">
+        <span class="icon">&#129516;</span>
+        <span><strong>Urine Anion Gap</strong> = (Na⁺ + K⁺ - Cl⁻) in <em>urine</em>. This tells you: is the kidney dumping enough NH4⁺ (acid)?<br><br>
+        <span class="highlight hl-green">Negative UAG</span> = kidney IS dumping lots of NH4⁺. NH4⁺ brings Cl⁻ with it, so Cl⁻ in urine is high, making the number go negative. This is <strong>Type 2</strong> (or diarrhea) — the kidney works fine, the problem is upstream.<br><br>
+        <span class="highlight hl-red">Positive UAG</span> = kidney is NOT dumping enough NH4⁺. Less NH4⁺ = less Cl⁻ in urine = the number stays positive. This is <strong>Type 1 and Type 4</strong> — the collecting duct is the broken part, so it can't dump acid properly.</span>
+      </div>
+      <p>Think of it this way: <span class="highlight hl-yellow">negative = kidney is trying hard</span> (good kidney, problem elsewhere). <span class="highlight hl-red">Positive = kidney gave up</span> (kidney itself is broken).</p>
+    </div>
+  </div>
+
+  <!-- CHUNK 2: Type 4 -->
+  <div class="chunk" style="--accent: #a855f7" onclick="this.classList.toggle('open')">
+    <div class="chunk-header">
+      <div class="chunk-num" style="background: #a855f7">2</div>
+      <div class="chunk-title">Type 4 RTA — The Banana Backup</div>
+      <div class="chunk-toggle">&#9660;</div>
+    </div>
+    <div class="chunk-body">
+      <p><span class="highlight hl-purple"><span class="tip">Aldosterone<span class="tip-text">A hormone made by the adrenal glands. It tells the collecting duct to: (1) reabsorb Na⁺, (2) secrete K⁺, and (3) secrete H⁺. Without it, K⁺ and H⁺ get trapped in blood.</span></span> deficiency or resistance.</span> No aldosterone means the <span class="tip">collecting duct<span class="tip-text">The final part of the nephron (kidney tube). Last chance to fine-tune urine — dump acid, dump potassium, concentrate urine.</span></span> can't secrete K+ or H+.</p>
+      <div class="key-fact" style="background: #a855f712; border: 1px solid #a855f733; color: #c4b5fd;">
+        <span class="icon">&#127820;</span> <span class="highlight hl-yellow"><span class="tip">Hyperkalemia<span class="tip-text">Too much potassium in the blood (normal: 3.5-5.0). Dangerous because it can cause fatal heart arrhythmias. Classic ECG: peaked T waves.</span></span></span> is THE hallmark. This is the ONLY RTA with high K+.
+      </div>
+      <p>The hyperkalemia itself makes things worse: <span class="highlight hl-yellow">high K+</span> suppresses <span class="tip">NH3+ synthesis<span class="tip-text">The proximal tubule makes ammonia (NH3) to help carry acid out. NH3 grabs an H⁺ to become NH4⁺, which gets excreted in urine. High K⁺ blocks this process — so acid has no ride out.</span></span> in the <span class="tip">proximal tubule<span class="tip-text">The first part of the nephron after the glomerulus. Reabsorbs ~65% of filtered water, sodium, and almost all bicarbonate. This is where Type 2 RTA breaks.</span></span>, which means <span class="highlight hl-red">less <span class="tip">NH4+ excretion<span class="tip-text">NH4⁺ (ammonium) is how the kidney dumps acid into urine. Less NH4⁺ = less acid removed = acidosis gets worse. It's a vicious cycle in Type 4.</span></span></span> = less acid dumped.</p>
+
+      <table class="mini-table">
+        <tr><th>Feature</th><th>Type 4</th></tr>
+        <tr><td>Serum K+</td><td><span class="highlight hl-yellow">HIGH</span></td></tr>
+        <tr><td>Urine pH</td><td><span class="highlight hl-orange">< 5.5</span> <span class="ph-bar" data-ph="4.5" data-label="Acidic"></span></td></tr>
+        <tr><td>Acidosis severity</td><td>Mild</td></tr>
+        <tr><td>Urine anion gap</td><td>Positive</td></tr>
+      </table>
+
+      <p style="font-weight:700; color: #c4b5fd; margin-top: 0.5rem;">Common causes — and WHY they cause Type 4:</p>
+      <div class="key-fact" style="background: #a855f708; border: 1px solid #a855f722; color: #c4b5fd;">
+        <span class="icon">&#127820;</span>
+        <span><span class="highlight hl-purple"><span class="tip">Diabetes<span class="tip-text">Long-standing diabetes damages the juxtaglomerular cells that produce renin. No renin = no angiotensin II = no signal to the adrenals to make aldosterone. This is called hyporeninemic hypoaldosteronism.</span></span></span> — #1 cause. Think about it: diabetes slowly destroys the kidney cells that make renin. No renin means the whole renin-angiotensin-aldosterone chain never fires. So aldosterone never gets made.</span>
+      </div>
+      <div class="key-fact" style="background: #3b82f608; border: 1px solid #3b82f622; color: #93c5fd;">
+        <span class="icon">&#128138;</span>
+        <span><span class="highlight hl-blue"><span class="tip">ACE inhibitors / ARBs<span class="tip-text">ACE inhibitors (lisinopril, enalapril) block the enzyme that converts angiotensin I to II. ARBs (losartan, valsartan) block the receptor. Either way: no angiotensin II signal = adrenals don't make aldosterone.</span></span></span> — These drugs INTENTIONALLY block the RAAS pathway. ACE-i stops angiotensin II from being made. ARBs block its receptor. Either way, the signal to "make aldosterone" never arrives. Less aldosterone = K⁺ builds up. That's why you check K⁺ when starting these drugs.</span>
+      </div>
+      <div class="key-fact" style="background: #ec489908; border: 1px solid #ec489922; color: #f9a8d4;">
+        <span class="icon">&#128138;</span>
+        <span><span class="highlight hl-pink"><span class="tip">NSAIDs<span class="tip-text">Ibuprofen, naproxen, etc. They block prostaglandins, which normally stimulate renin release. No prostaglandins = no renin = no aldosterone. Same chain, different starting point.</span></span></span> — NSAIDs block prostaglandins. Prostaglandins normally help trigger renin release. Block prostaglandins = less renin = less aldosterone. Same domino chain, just knocked over at a different spot.</span>
+      </div>
+      <div class="key-fact" style="background: #f59e0b08; border: 1px solid #f59e0b22; color: #fcd34d;">
+        <span class="icon">&#129516;</span>
+        <span><span class="highlight hl-orange"><span class="tip">Adrenal insufficiency<span class="tip-text">The adrenal glands (which sit on top of the kidneys) are damaged or destroyed. Since aldosterone is made in the adrenal cortex (zona glomerulosa), no adrenals = no aldosterone directly.</span></span></span> — The adrenals are WHERE aldosterone is made. If they're destroyed (Addison's, steroids withdrawal), the factory is gone. Simple.</span>
+      </div>
+
+      <p style="font-weight:700; color: #c4b5fd; margin-top: 0.75rem;">Treatment — and WHY each one works:</p>
+      <div class="key-fact" style="background: #22c55e08; border: 1px solid #22c55e22; color: #86efac;">
+        <span class="icon">&#128138;</span>
+        <span><span class="highlight hl-green"><span class="tip">Fludrocortisone<span class="tip-text">A synthetic version of aldosterone. You're literally replacing what's missing — giving the collecting duct the hormone it needs to start dumping K⁺ and H⁺ into urine again.</span></span></span> — The problem is "no aldosterone." The fix is "give them aldosterone." Fludrocortisone IS synthetic aldosterone. Collecting duct gets the signal, starts dumping K⁺ and H⁺ again.</span>
+      </div>
+      <div class="key-fact" style="background: #3b82f608; border: 1px solid #3b82f622; color: #93c5fd;">
+        <span class="icon">&#128138;</span>
+        <span><span class="highlight hl-blue"><span class="tip">Furosemide<span class="tip-text">Loop diuretic. Blocks Na⁺/K⁺/2Cl⁻ reabsorption in the loop of Henle. This floods the collecting duct with Na⁺, and Na⁺ reabsorption there is coupled to K⁺ secretion. More Na⁺ in = more K⁺ out.</span></span></span> — A loop diuretic. It blocks reabsorption in the loop, which floods the collecting duct with sodium. When Na⁺ gets reabsorbed there, K⁺ gets pushed out in exchange. More flow = more K⁺ washout.</span>
+      </div>
+      <div class="key-fact" style="background: #eab30808; border: 1px solid #eab30822; color: #fde047;">
+        <span class="icon">&#127820;</span>
+        <span><span class="highlight hl-yellow">Low K⁺ diet</span> — The simplest one. If you can't dump potassium fast enough, eat less of it. Avoid bananas, oranges, potatoes, tomatoes. Less K⁺ coming in = less to build up.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHUNK 3: Type 1 -->
+  <div class="chunk" style="--accent: #ef4444" onclick="this.classList.toggle('open')">
+    <div class="chunk-header">
+      <div class="chunk-num" style="background: #ef4444">3</div>
+      <div class="chunk-title">Type 1 RTA — The Acid Trap</div>
+      <div class="chunk-toggle">&#9660;</div>
+    </div>
+    <div class="chunk-body">
+      <p><span class="highlight hl-red"><span class="tip">Alpha-intercalated cells<span class="tip-text">Special acid-pumping cells in the collecting duct. Their only job: grab H⁺ from blood and pump it into urine. In Type 1, these cells are broken.</span></span></span> in the collecting duct can't secrete H+. Acid is trapped in the blood.</p>
+      <div class="key-fact" style="background: #ef444412; border: 1px solid #ef444433; color: #fca5a5;">
+        <span class="icon">&#128270;</span> Urine pH is <span class="highlight hl-red">ALWAYS > 5.5</span>. The collecting duct CANNOT acidify. This is the board differentiator.
+      </div>
+
+      <table class="mini-table">
+        <tr><th>Feature</th><th>Type 1</th></tr>
+        <tr><td>Serum K+</td><td><span class="highlight hl-blue">Low-normal</span></td></tr>
+        <tr><td>Urine pH</td><td><span class="highlight hl-red">> 5.5 ALWAYS</span> <span class="ph-bar" data-ph="6.5" data-label="Basic"></span></td></tr>
+        <tr><td>Acidosis severity</td><td>Severe</td></tr>
+        <tr><td>Stones?</td><td><span class="highlight hl-red">YES</span> (calcium phosphate)</td></tr>
+        <tr><td>Bone effects</td><td>Demineralization, osteopenia</td></tr>
+      </table>
+
+      <p style="font-weight:700; color: #fca5a5; margin-top: 0.5rem;">Why stones?</p>
+      <p>Basic urine pH causes <span class="highlight hl-red"><span class="tip">calcium phosphate precipitation<span class="tip-text">When urine is too basic (alkaline), calcium and phosphate can't stay dissolved — they crystallize into stones. That's why only Type 1 (basic urine) gets stones.</span></span></span>. Type 1 is the ONLY RTA with kidney stones.</p>
+
+      <p style="font-weight:700; color: #fca5a5; margin-top: 0.5rem;">Causes — and WHY:</p>
+      <div class="key-fact" style="background: #f59e0b08; border: 1px solid #f59e0b22; color: #fcd34d;">
+        <span class="icon">&#128138;</span>
+        <span><span class="highlight hl-orange"><span class="tip">Analgesic nephropathy<span class="tip-text">Kidney damage from chronic use of painkillers (NSAIDs, acetaminophen). Damages the medulla and papillae where the collecting duct lives.</span></span></span> — Chronic painkillers damage the medulla (inner kidney) where the collecting duct lives. If you destroy the neighborhood, the acid-pumping cells can't do their job.</span>
+      </div>
+      <div class="key-fact" style="background: #ec489908; border: 1px solid #ec489922; color: #f9a8d4;">
+        <span class="icon">&#128138;</span>
+        <span><span class="highlight hl-pink"><span class="tip">Amphotericin B<span class="tip-text">A powerful antifungal drug. Works by binding to ergosterol in fungal cell membranes and poking holes. Problem: it also pokes holes in human kidney tubule cells.</span></span></span> — This antifungal works by literally poking holes in cell membranes. It kills fungi this way, but it also pokes holes in collecting duct cells. Leaky cells can't maintain the H⁺ gradient needed to pump acid out.</span>
+      </div>
+      <div class="key-fact" style="background: #3b82f608; border: 1px solid #3b82f622; color: #93c5fd;">
+        <span class="icon">&#129516;</span>
+        <span><span class="tip">Sjogren's syndrome<span class="tip-text">Autoimmune disease where the immune system attacks moisture glands (dry eyes, dry mouth). The same autoimmune attack can target the kidney's intercalated cells.</span></span> — Autoimmune attack doesn't just hit salivary glands. It can target the alpha-intercalated cells directly. Your own immune system destroys the acid pumps.</span>
+      </div>
+
+      <p style="font-weight:700; color: #fca5a5; margin-top: 0.5rem;">Treatment — and WHY:</p>
+      <div class="key-fact" style="background: #22c55e08; border: 1px solid #22c55e22; color: #86efac;">
+        <span class="icon">&#128138;</span>
+        <span><span class="highlight hl-green"><span class="tip">Alkali therapy<span class="tip-text">Giving sodium bicarbonate (NaHCO₃) or potassium citrate by mouth. You're directly replacing the base the body can't keep, and the citrate binds calcium to prevent stones.</span></span></span> — The collecting duct can't pump acid out, so acid builds up. Solution: give base (bicarb) by mouth to neutralize the acid directly. Potassium citrate is preferred because citrate also binds calcium in urine, preventing those kidney stones.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHUNK 4: Type 2 -->
+  <div class="chunk" style="--accent: #f59e0b" onclick="this.classList.toggle('open')">
+    <div class="chunk-header">
+      <div class="chunk-num" style="background: #f59e0b">4</div>
+      <div class="chunk-title">Type 2 RTA — The Proximal Leak</div>
+      <div class="chunk-toggle">&#9660;</div>
+    </div>
+    <div class="chunk-body">
+      <p><span class="highlight hl-orange"><span class="tip">PCT cells<span class="tip-text">Proximal Convoluted Tubule cells. The workhorses of the nephron — they reabsorb ~85% of filtered bicarbonate, plus glucose, amino acids, and phosphate.</span></span> can't reabsorb HCO₃⁻.</span> Base leaks into the urine early, but the collecting duct still works fine.</p>
+      <div class="key-fact" style="background: #f59e0b12; border: 1px solid #f59e0b33; color: #fcd34d;">
+        <span class="icon">&#128161;</span> Urine pH <span class="highlight hl-orange">< 5.5</span> — because the collecting duct CAN still acidify. The defect is upstream.
+      </div>
+
+      <table class="mini-table">
+        <tr><th>Feature</th><th>Type 2</th></tr>
+        <tr><td>Serum K+</td><td><span class="highlight hl-blue">Low-normal</span></td></tr>
+        <tr><td>Urine pH</td><td><span class="highlight hl-orange">< 5.5</span> <span class="ph-bar" data-ph="4.5" data-label="Acidic"></span></td></tr>
+        <tr><td>Acidosis severity</td><td>Moderate</td></tr>
+        <tr><td>Stones?</td><td>No</td></tr>
+        <tr><td>Bone effects</td><td>Rickets/osteomalacia (Vit D-resistant)</td></tr>
+      </table>
+
+      <p style="font-weight:700; color: #fcd34d; margin-top: 0.5rem;">Key associations:</p>
+      <p><span class="highlight hl-purple"><span class="tip">Fanconi syndrome<span class="tip-text">The proximal tubule loses its ability to reabsorb EVERYTHING — glucose, amino acids, phosphate, uric acid, AND bicarbonate all spill into urine. Like a broken shopping bag.</span></span></span> (proximal tubule dysfunction loses everything — glucose, amino acids, phosphate, uric acid, HCO₃⁻). Also: <span class="highlight hl-blue"><span class="tip">acetazolamide<span class="tip-text">A carbonic anhydrase inhibitor (used for glaucoma, altitude sickness). Blocks the enzyme that helps the proximal tubule reabsorb HCO₃⁻ — intentionally causes Type 2 RTA as a side effect.</span></span></span> (carbonic anhydrase inhibitor).</p>
+
+      <p style="font-weight:700; color: #fcd34d; margin-top: 0.5rem;">Treatment — and WHY it's harder:</p>
+      <div class="key-fact" style="background: #22c55e08; border: 1px solid #22c55e22; color: #86efac;">
+        <span class="icon">&#128138;</span>
+        <span><span class="highlight hl-green">Alkali therapy</span> — Same idea as Type 1 (give bicarb), but here's the catch: the proximal tubule is the broken part, and that's WHERE bicarb gets reabsorbed. So you give bicarb... and it leaks right back out into urine. You need much higher doses to overwhelm the leak and keep enough in the blood. It's like filling a bucket with a hole — you just pour faster.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHUNK 5: The COMLEX Cheat Sheet -->
+  <div class="chunk" style="--accent: #22c55e" onclick="this.classList.toggle('open')">
+    <div class="chunk-header">
+      <div class="chunk-num" style="background: #22c55e">5</div>
+      <div class="chunk-title">COMLEX Speed Run — 4 Questions</div>
+      <div class="chunk-toggle">&#9660;</div>
+    </div>
+    <div class="chunk-body">
+      <p>RTAs aren't super high-yield on COMLEX — maybe <span class="highlight hl-green">one diagnosis question</span>. But if you know these four things, you'll get it right:</p>
+
+      <div class="key-fact" style="background: #22c55e12; border: 1px solid #22c55e33; color: #86efac;">
+        <span class="icon">1.</span> <span class="highlight hl-yellow">Hyperkalemia?</span> = Type 4. Done. Move on.
+      </div>
+      <div class="key-fact" style="background: #3b82f612; border: 1px solid #3b82f633; color: #93c5fd;">
+        <span class="icon">2.</span> Urine pH <span class="highlight hl-red">> 5.5</span> = Type 1 (distal, can't acidify).<br>Urine pH <span class="highlight hl-orange">< 5.5</span> = Type 2 (proximal, can acidify).
+      </div>
+      <div class="key-fact" style="background: #ef444412; border: 1px solid #ef444433; color: #fca5a5;">
+        <span class="icon">3.</span> <span class="highlight hl-red">Kidney stones?</span> = Type 1 only.
+      </div>
+      <div class="key-fact" style="background: #a855f712; border: 1px solid #a855f733; color: #c4b5fd;">
+        <span class="icon">4.</span> <span class="highlight hl-purple">Fanconi syndrome?</span> = Type 2.
+      </div>
+
+      <table class="mini-table" style="margin-top: 1rem;">
+        <tr><th>Feature</th><th style="color:#ef4444">Type 1</th><th style="color:#f59e0b">Type 2</th><th style="color:#a855f7">Type 4</th></tr>
+        <tr><td>Where?</td><td>Distal</td><td>Proximal</td><td>Collecting duct</td></tr>
+        <tr><td>What breaks?</td><td>H+ secretion</td><td>HCO₃⁻ reabsorption</td><td>Aldosterone</td></tr>
+        <tr><td>K+</td><td><span class="highlight hl-blue">Low</span></td><td><span class="highlight hl-blue">Low</span></td><td><span class="highlight hl-yellow">HIGH</span></td></tr>
+        <tr><td>Urine pH</td><td><span class="highlight hl-red">> 5.5</span> <span class="ph-bar" data-ph="6.5" data-label=""></span></td><td><span class="highlight hl-orange">< 5.5</span> <span class="ph-bar" data-ph="4.5" data-label=""></span></td><td><span class="highlight hl-orange">< 5.5</span> <span class="ph-bar" data-ph="4.5" data-label=""></span></td></tr>
+        <tr><td><span class="tip">Urine AG<span class="tip-text">Urine Anion Gap = (Na⁺ + K⁺ - Cl⁻) in urine. Positive = kidney can't dump acid. Negative = kidney IS dumping acid fine, problem is elsewhere.</span></span></td><td><span class="tip">Positive<span class="tip-text">Collecting duct is broken, can't make NH4⁺. Less NH4⁺ = less Cl⁻ carried out = positive gap.</span></span></td><td><span class="tip">Negative<span class="tip-text">Collecting duct works! Lots of NH4⁺ being made and excreted, bringing Cl⁻ with it = negative gap. Problem is upstream (proximal leak).</span></span></td><td><span class="tip">Positive<span class="tip-text">Even though the collecting duct structure is fine, high K⁺ blocks NH3 synthesis. Less NH4⁺ = less Cl⁻ = positive gap.</span></span></td></tr>
+        <tr><td>Stones?</td><td><span class="highlight hl-red">Yes</span></td><td>No</td><td>No</td></tr>
+        <tr><td>Severity</td><td>Severe</td><td>Moderate</td><td>Mild</td></tr>
+        <tr><td>Treatment</td><td>Alkali</td><td>Alkali (high dose)</td><td>Fludrocortisone + furosemide</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- CHUNK 6: Clinical Vignette -->
+  <div class="chunk" style="--accent: #ec4899" onclick="this.classList.toggle('open')">
+    <div class="chunk-header">
+      <div class="chunk-num" style="background: #ec4899">6</div>
+      <div class="chunk-title">Practice Vignette — Walk Through It</div>
+      <div class="chunk-toggle">&#9660;</div>
+    </div>
+    <div class="chunk-body">
+      <div class="key-fact" style="background: #1e293b; border: 1px solid #334155; color: #e2e8f0;">
+        <span class="icon">&#128203;</span>
+        <span>Patient with <span class="highlight hl-yellow">hyperkalemia</span> and a long history of <span class="highlight hl-purple">poorly controlled diabetes</span>. Current medications aren't controlling her sugars well.</span>
+      </div>
+      <p style="font-weight:700; color: #f9a8d4; margin-top: 0.75rem;">Think through it:</p>
+      <p><span class="highlight hl-yellow">Hyperkalemia</span> + diabetes? That's the pattern.</p>
+      <p>Diabetes causes <span class="highlight hl-purple"><span class="tip">hyporeninemic hypoaldosteronism<span class="tip-text">Diabetes damages the kidney cells that make renin. No renin = no angiotensin II = no signal to make aldosterone. Result: aldosterone is low, K⁺ and H⁺ build up.</span></span></span> = no aldosterone = <span class="highlight hl-purple">Type 4 RTA</span>.</p>
+
+      <div class="answer-grid" style="margin-top: 1rem;">
+        <div class="answer-card wrong">
+          <div class="answer-letter" style="color: #ef4444;">A. Adrenal insufficiency</div>
+          <div class="answer-text">CAN cause Type 4, but this patient has no signs of it (no nausea/vomiting, confusion, hypoglycemia, hyperpigmentation). Most common cause of adrenal insufficiency = long-term steroids.</div>
+        </div>
+        <div class="answer-card wrong">
+          <div class="answer-letter" style="color: #f59e0b;">B. Metformin side effect</div>
+          <div class="answer-text">Metformin's big adverse effect is <span class="highlight hl-orange">lactic acidosis</span> in renal insufficiency. Different mechanism entirely. Her poorly controlled sugars suggest she needs an A1c check.</div>
+        </div>
+        <div class="answer-card wrong">
+          <div class="answer-letter" style="color: #ef4444;">C. Type 1 RTA</div>
+          <div class="answer-text">Type 1 = <span class="highlight hl-blue">hypokalemia</span> (not hyperkalemia). Also: urine pH > 5.5, calcium phosphate stones. Causes: analgesic nephropathy, amphotericin B.</div>
+        </div>
+        <div class="answer-card correct">
+          <div class="answer-letter" style="color: #22c55e;">D. Type 4 RTA &#10003;</div>
+          <div class="answer-text"><span class="highlight hl-yellow">Hyperkalemia</span> + <span class="highlight hl-purple">diabetes</span> = Type 4. Urine pH < 5.5. Aldosterone deficiency. The hyperkalemia is what makes this easy — it's the ONLY RTA with high K+.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHUNK 7: Wrong Answer Traps -->
+  <div class="chunk" style="--accent: #f97316" onclick="this.classList.toggle('open')">
+    <div class="chunk-header">
+      <div class="chunk-num" style="background: #f97316">7</div>
+      <div class="chunk-title">Board Traps — Don't Fall For These</div>
+      <div class="chunk-toggle">&#9660;</div>
+    </div>
+    <div class="chunk-body">
+      <div class="key-fact" style="background: #ef444412; border: 1px solid #ef444433; color: #fca5a5;">
+        <span class="icon">&#9888;</span> <strong>Trap 1:</strong> Seeing "acidic urine" and picking Type 1. WRONG. Type 1 has <span class="highlight hl-red">BASIC urine (> 5.5)</span>. Types 2 and 4 have acidic urine.
+      </div>
+      <div class="key-fact" style="background: #f59e0b12; border: 1px solid #f59e0b33; color: #fcd34d;">
+        <span class="icon">&#9888;</span> <strong>Trap 2:</strong> Confusing "distal" and "proximal" labels. <span class="highlight hl-orange">Type 1 = distal</span> (end of nephron). <span class="highlight hl-orange">Type 2 = proximal</span> (beginning). The numbers don't match the location order.
+      </div>
+      <div class="key-fact" style="background: #a855f712; border: 1px solid #a855f733; color: #c4b5fd;">
+        <span class="icon">&#9888;</span> <strong>Trap 3:</strong> Assuming adrenal insufficiency = Type 4 without checking for symptoms. It CAN cause Type 4, but <span class="highlight hl-purple">diabetes is by far the #1 cause</span>.
+      </div>
+      <div class="key-fact" style="background: #3b82f612; border: 1px solid #3b82f633; color: #93c5fd;">
+        <span class="icon">&#9888;</span> <strong>Trap 4:</strong> Forgetting that <span class="highlight hl-blue">ALL RTAs</span> share hyperchloremic non-anion gap metabolic acidosis. If the anion gap is elevated, it's NOT an RTA.
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<p class="footer">Mo's RTA Deep Dive — COMLEX Review</p>
+
+<script>
+// Tap-to-toggle tooltips on mobile
+document.querySelectorAll('.tip').forEach(tip => {
+  tip.addEventListener('click', e => {
+    e.stopPropagation();
+    const wasActive = tip.classList.contains('active');
+    document.querySelectorAll('.tip.active').forEach(t => t.classList.remove('active'));
+    if (!wasActive) tip.classList.add('active');
+  });
+});
+document.addEventListener('click', () => {
+  document.querySelectorAll('.tip.active').forEach(t => t.classList.remove('active'));
+});
+
+// Nephron diagram
+const nephronData = {
+  normal: { prox: 'ok', cd: 'ok', proxText: 'OK', cdText: 'OK', urinePh: 'pH 4.5-6', color: '#22c55e', label: 'All segments working normally' },
+  type2:  { prox: 'broken', cd: 'ok', proxText: 'HCO₃⁻ LEAKS!', cdText: 'OK', urinePh: 'pH < 5.5', color: '#f59e0b', label: 'DEFECT: Proximal tubule leaks bicarbonate' },
+  type1:  { prox: 'ok', cd: 'broken', proxText: 'OK', cdText: 'H⁺ BLOCKED!', urinePh: 'pH > 5.5', color: '#ef4444', label: 'DEFECT: Collecting duct can\'t secrete acid' },
+  type4:  { prox: 'ok', cd: 'broken', proxText: 'OK', cdText: 'H⁺ & K⁺ BLOCKED!', urinePh: 'pH < 5.5', color: '#a855f7', label: 'DEFECT: No aldosterone → can\'t dump K⁺ or H⁺' }
+};
+
+function setNephron(type) {
+  const d = nephronData[type];
+  // Update buttons
+  document.querySelectorAll('.nephron-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  // Update segments
+  const segs = ['seg-glom','seg-loop'];
+  segs.forEach(id => { const el = document.getElementById(id); el.setAttribute('stroke', d.color); el.classList.remove('broken'); });
+  const prox = document.getElementById('seg-prox');
+  prox.setAttribute('stroke', d.prox === 'broken' ? '#ef4444' : d.color);
+  prox.setAttribute('fill', d.prox === 'broken' ? '#ef444415' : '#1e293b');
+  d.prox === 'broken' ? prox.classList.add('broken') : prox.classList.remove('broken');
+  const cd = document.getElementById('seg-cd');
+  cd.setAttribute('stroke', d.cd === 'broken' ? '#ef4444' : d.color);
+  cd.setAttribute('fill', d.cd === 'broken' ? '#ef444415' : '#1e293b');
+  d.cd === 'broken' ? cd.classList.add('broken') : cd.classList.remove('broken');
+  const urine = document.getElementById('seg-urine');
+  urine.setAttribute('stroke', d.color);
+  // Update text
+  document.getElementById('prox-status').textContent = d.proxText;
+  document.getElementById('prox-status').setAttribute('fill', d.prox === 'broken' ? '#fca5a5' : d.color);
+  document.getElementById('cd-status').textContent = d.cdText;
+  document.getElementById('cd-status').setAttribute('fill', d.cd === 'broken' ? '#fca5a5' : d.color);
+  document.getElementById('urine-ph').textContent = d.urinePh;
+  document.getElementById('urine-ph').setAttribute('fill', d.color);
+  document.getElementById('defect-label').textContent = d.label;
+  document.getElementById('defect-label').setAttribute('fill', d.color);
+}
+
+// pH bars — render inline SVG scales
+document.querySelectorAll('.ph-bar').forEach((bar, i) => {
+  const ph = parseFloat(bar.dataset.ph);
+  const label = bar.dataset.label || '';
+  const w = 100, h = 16;
+  const x = (ph / 14) * w;
+  const color = ph < 5.5 ? '#ef4444' : ph < 7 ? '#f59e0b' : ph < 8 ? '#22c55e' : '#3b82f6';
+  const gid = 'phg' + i;
+  bar.innerHTML = `
+    <svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
+      <defs><linearGradient id="${gid}"><stop offset="0%" stop-color="#ef4444"/><stop offset="50%" stop-color="#22c55e"/><stop offset="100%" stop-color="#3b82f6"/></linearGradient></defs>
+      <rect x="0" y="4" width="${w}" height="8" rx="4" fill="url(#${gid})" opacity="0.3"/>
+      <circle cx="${x}" cy="8" r="5" fill="${color}" stroke="#fff" stroke-width="1.5"/>
+      <text x="${x}" y="3" text-anchor="middle" fill="${color}" font-size="6" font-weight="800" font-family="monospace">${ph}</text>
+    </svg>
+    <span class="ph-label" style="color:${color}">${label}</span>`;
+});
+</script>
+
+</body>
+</html>

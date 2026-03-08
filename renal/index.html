@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Renal — Bone Wizardry</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'JetBrains Mono', monospace;
+    background: linear-gradient(180deg, #020617 0%, #0f172a 100%);
+    color: #e2e8f0; min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 2rem 1rem;
+  }
+  a { text-decoration: none; color: inherit; }
+
+  .nav { display: flex; justify-content: center; gap: 0.75rem; margin-bottom: 2rem; flex-wrap: wrap; }
+  .nav-link {
+    padding: 0.5rem 1rem; border-radius: 0.75rem; font-size: 0.75rem; font-weight: 700;
+    border: 2px solid #334155; color: #94a3b8; transition: all 0.3s;
+    font-family: inherit;
+  }
+  .nav-link:hover { border-color: #3b82f6; color: #3b82f6; background: #3b82f610; }
+
+  .header { text-align: center; margin-bottom: 2.5rem; }
+  .header-sub { color: #64748b; font-size: 0.65rem; letter-spacing: 0.5em; text-transform: uppercase; margin-bottom: 0.5rem; }
+  .header h1 {
+    font-size: 2.2rem; font-weight: 900;
+    background: linear-gradient(135deg, #3b82f6, #06b6d4, #22c55e);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .header-desc { color: #64748b; font-size: 0.75rem; margin-top: 0.5rem; }
+
+  .topic-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.25rem; max-width: 48rem; width: 100%;
+  }
+
+  .topic-card {
+    border: 2px solid #1e293b; border-radius: 1.25rem; padding: 1.75rem;
+    background: #0f172a; transition: all 0.35s; cursor: pointer;
+    display: block; position: relative; overflow: hidden;
+  }
+  .topic-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: var(--c); opacity: 0; transition: opacity 0.3s;
+  }
+  .topic-card:hover {
+    border-color: var(--c); transform: translateY(-4px);
+    box-shadow: 0 12px 40px color-mix(in srgb, var(--c) 15%, transparent);
+  }
+  .topic-card:hover::before { opacity: 1; }
+  .topic-card.empty { opacity: 0.5; cursor: default; }
+
+  .card-icon { font-size: 2rem; margin-bottom: 1rem; }
+  .card-title { font-weight: 800; font-size: 1.1rem; margin-bottom: 0.5rem; color: #f1f5f9; }
+  .card-desc { color: #64748b; font-size: 0.8rem; line-height: 1.5; margin-bottom: 1rem; }
+  .card-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+  .tag {
+    padding: 0.2rem 0.6rem; border-radius: 9999px; font-size: 0.65rem; font-weight: 700;
+    letter-spacing: 0.05em;
+  }
+  .empty-label { font-size: 0.7rem; color: #334155; font-style: italic; }
+
+  .footer { text-align: center; color: #334155; font-size: 0.7rem; margin-top: 3rem; letter-spacing: 0.1em; }
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <a href="/" class="nav-link">Home</a>
+</div>
+
+<div class="header">
+  <p class="header-sub">COMLEX Review — Renal System</p>
+  <h1>&#129516; Renal</h1>
+  <p class="header-desc">Tap a topic to explore. More topics coming soon.</p>
+</div>
+
+<div class="topic-grid">
+
+  <a href="rta/index.html" class="topic-card" style="--c: #3b82f6">
+    <div class="card-icon">&#128736;</div>
+    <div class="card-title">Renal Tubular Acidosis</div>
+    <div class="card-desc">Types 1, 2, and 4. Interactive nephron diagram, deep dive with chunked learning, clinical vignette, board traps.</div>
+    <div class="card-tags">
+      <span class="tag" style="background:#3b82f620;color:#93c5fd;border:1px solid #3b82f644">Assembly Line</span>
+      <span class="tag" style="background:#a855f720;color:#c4b5fd;border:1px solid #a855f744">Deep Dive</span>
+      <span class="tag" style="background:#ec489920;color:#f9a8d4;border:1px solid #ec489944">Vignette</span>
+    </div>
+  </a>
+
+  <div class="topic-card empty" style="--c: #06b6d4">
+    <div class="card-icon">&#129516;</div>
+    <div class="card-title">Acid-Base Disorders</div>
+    <div class="card-desc">Metabolic vs respiratory, compensation rules, ABG interpretation.</div>
+    <div class="empty-label">coming soon</div>
+  </div>
+
+  <div class="topic-card empty" style="--c: #22c55e">
+    <div class="card-icon">&#129516;</div>
+    <div class="card-title">Glomerular Diseases</div>
+    <div class="card-desc">Nephrotic vs nephritic, complement levels, biopsy patterns.</div>
+    <div class="empty-label">coming soon</div>
+  </div>
+
+  <div class="topic-card empty" style="--c: #f59e0b">
+    <div class="card-icon">&#129516;</div>
+    <div class="card-title">Electrolyte Disorders</div>
+    <div class="card-desc">Hypo/hypernatremia, hypo/hyperkalemia, calcium, phosphate.</div>
+    <div class="empty-label">coming soon</div>
+  </div>
+
+  <div class="topic-card empty" style="--c: #ef4444">
+    <div class="card-icon">&#129516;</div>
+    <div class="card-title">AKI & CKD</div>
+    <div class="card-desc">Pre-renal vs intrinsic vs post-renal, staging, BUN/Cr ratio.</div>
+    <div class="empty-label">coming soon</div>
+  </div>
+
+  <div class="topic-card empty" style="--c: #a855f7">
+    <div class="card-icon">&#129516;</div>
+    <div class="card-title">Diuretics</div>
+    <div class="card-desc">Site of action, electrolyte effects, clinical use.</div>
+    <div class="empty-label">coming soon</div>
+  </div>
+
+</div>
+
+<p class="footer">Bone Wizardry — Renal</p>
+
+</body>
+</html>

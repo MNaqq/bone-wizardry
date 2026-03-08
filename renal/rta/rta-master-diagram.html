@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RTA Assembly Line — Bone Wizardry</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'JetBrains Mono', monospace;
+    background: linear-gradient(180deg, #020617 0%, #0f172a 100%);
+    color: #fff;
+    min-height: 100vh;
+    padding: 2rem 1rem;
+  }
+  .header { text-align: center; margin-bottom: 2.5rem; }
+  .header-sub { color: #64748b; font-size: 0.7rem; letter-spacing: 0.4em; text-transform: uppercase; margin-bottom: 0.5rem; }
+  .header h1 { font-size: 2.2rem; font-weight: 900; letter-spacing: -0.02em; margin-bottom: 0.25rem; transition: all 0.5s; }
+  .header-desc { color: #64748b; font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase; margin-top: 0.5rem; }
+
+  /* Ion badges */
+  .ion { display: inline-flex; align-items: center; border-radius: 9999px; font-weight: 700; color: #fff; font-size: 0.75rem; padding: 0.2rem 0.6rem; }
+  .ion-hco3 { background: #3b82f6; box-shadow: 0 0 12px #3b82f644; }
+  .ion-h { background: #ef4444; box-shadow: 0 0 12px #ef444444; }
+  .ion-k { background: #eab308; box-shadow: 0 0 12px #eab30844; }
+  .ion-cl { background: #22c55e; box-shadow: 0 0 12px #22c55e44; }
+  .ion-ca { background: #9ca3af; box-shadow: 0 0 12px #9ca3af44; }
+
+  .legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.75rem; margin-bottom: 2rem; }
+  .legend-item { display: flex; align-items: center; gap: 0.4rem; }
+  .legend-label { color: #64748b; font-size: 0.7rem; }
+
+  /* Tabs */
+  .tabs { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem; margin-bottom: 2.5rem; }
+  .tab {
+    padding: 0.6rem 1.2rem; border-radius: 0.75rem; font-weight: 700; font-size: 0.8rem;
+    border: 2px solid #334155; background: transparent; color: #64748b;
+    cursor: pointer; transition: all 0.3s; font-family: inherit;
+  }
+  .tab:hover { border-color: #475569; }
+  .tab.active { box-shadow: 0 0 20px var(--tc33); }
+
+  /* Tagline */
+  .tagline {
+    text-align: center; margin: 0 auto 2rem; max-width: 36rem;
+    padding: 0.75rem 1.5rem; border-radius: 1rem; transition: all 0.5s;
+    font-weight: 700; font-size: 0.95rem;
+  }
+
+  /* Assembly line */
+  .assembly { max-width: 72rem; margin: 0 auto 2.5rem; }
+  .flow-label { display: flex; align-items: center; gap: 0.5rem; color: #475569; font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 1rem; }
+  .flow-line { flex: 1; border-top: 1px dashed #334155; }
+  .stations { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.5rem; align-items: stretch; }
+  @media (max-width: 900px) { .stations { grid-template-columns: 1fr; } .arrow-cell { transform: rotate(90deg); } }
+  .station {
+    border: 2px solid #334155; border-radius: 1rem; padding: 1.25rem; background: #0f172a;
+    transition: all 0.5s; min-height: 140px;
+  }
+  .station.broken { background: #ef444410; border-color: #ef4444; box-shadow: 0 0 24px #ef444433; }
+  .station.ok-active { box-shadow: 0 0 24px var(--tc33); border-color: var(--tc); }
+  .station-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; }
+  .station-icon { font-size: 1.5rem; }
+  .station-title { font-weight: 700; font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; }
+  .station-text { font-weight: 600; font-size: 0.9rem; color: #94a3b8; margin-bottom: 0.25rem; transition: color 0.3s; }
+  .station.broken .station-text { color: #fca5a5; }
+  .station-detail { color: #64748b; font-size: 0.7rem; }
+  .defect-badge { margin-top: 0.75rem; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: #fca5a5; animation: pulse 1.5s infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+  .urine-station { transition: all 0.5s; }
+  .urine-ph { font-weight: 900; font-size: 1.3rem; margin-bottom: 0.25rem; }
+
+  .arrow-cell { display: flex; align-items: center; justify-content: center; color: #475569; font-size: 1.5rem; font-weight: 900; }
+
+  /* Labs */
+  .labs { max-width: 28rem; margin: 0 auto; }
+  .labs-card { border-radius: 1rem; padding: 1.5rem; background: #0f172a; border: 2px solid; transition: all 0.5s; }
+  .labs-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.25rem; }
+  .labs-title { font-weight: 700; font-size: 0.75rem; letter-spacing: 0.15em; text-transform: uppercase; }
+  .lab-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0.75rem 1rem; border-radius: 0.75rem; margin-bottom: 0.5rem; transition: all 0.3s;
+  }
+  .lab-row.abnormal { background: #ef444415; border: 1px solid #ef444444; }
+  .lab-row.normal-row { background: #1e293b; border: 1px solid transparent; }
+  .lab-left { display: flex; align-items: center; gap: 0.75rem; }
+  .lab-label { color: #64748b; font-size: 0.8rem; }
+  .lab-value { font-weight: 700; font-size: 0.8rem; }
+  .lab-value.abnormal { color: #fca5a5; }
+  .lab-value.normal-val { color: #94a3b8; }
+
+  .pearl { margin-top: 1.25rem; padding: 1rem; border-radius: 0.75rem; font-size: 0.8rem; transition: all 0.3s; }
+  .pearl-key { font-weight: 700; }
+  .pearl-text { color: #94a3b8; }
+
+  /* Comparison table */
+  .compare { max-width: 56rem; margin: 3rem auto 0; }
+  .compare-title { text-align: center; color: #64748b; font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 1.5rem; }
+  .compare-wrap { overflow-x: auto; border-radius: 1rem; border: 1px solid #1e293b; }
+  table { width: 100%; font-size: 0.8rem; border-collapse: collapse; }
+  thead tr { background: #1e293b; }
+  th { padding: 1rem; font-weight: 700; font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: #64748b; }
+  th:first-child, td:first-child { text-align: left; }
+  th:not(:first-child):not(:last-child) { text-align: center; }
+  td { padding: 1rem; text-align: center; color: #cbd5e1; }
+  td:last-child { text-align: left; color: #64748b; font-size: 0.7rem; }
+  tbody tr { cursor: pointer; transition: all 0.3s; border-left: 3px solid transparent; }
+  tbody tr:hover { background: #ffffff08; }
+  tbody tr.selected { border-left: 3px solid var(--row-color); }
+
+  .footer { text-align: center; color: #334155; font-size: 0.7rem; margin-top: 2.5rem; letter-spacing: 0.1em; }
+
+  /* Nav */
+  .nav { display: flex; justify-content: center; gap: 0.75rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+  .nav-link {
+    padding: 0.5rem 1rem; border-radius: 0.75rem; font-size: 0.75rem; font-weight: 700;
+    border: 2px solid #334155; color: #94a3b8; transition: all 0.3s; cursor: pointer;
+    font-family: inherit; text-decoration: none;
+  }
+  .nav-link:hover { border-color: #3b82f6; color: #3b82f6; background: #3b82f610; }
+  .nav-link.active { border-color: #3b82f6; color: #3b82f6; background: #3b82f610; }
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <a href="/" class="nav-link">Home</a>
+  <a href="index.html" class="nav-link">RTA Portal</a>
+  <a href="rta-master-diagram.html" class="nav-link active">Assembly Line</a>
+  <a href="rta-deep-dive.html" class="nav-link">Deep Dive</a>
+</div>
+
+<div class="header">
+  <p class="header-sub">🛠️ The Master</p>
+  <h1 id="mainTitle">RTA Assembly Line</h1>
+  <p class="header-desc">Where &amp; How Each RTA Breaks the Kidney</p>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><span class="ion ion-hco3">HCO₃⁻</span><span class="legend-label">Base</span></div>
+  <div class="legend-item"><span class="ion ion-h">H⁺</span><span class="legend-label">Acid</span></div>
+  <div class="legend-item"><span class="ion ion-k">K⁺</span><span class="legend-label">Potassium</span></div>
+  <div class="legend-item"><span class="ion ion-cl">Cl⁻</span><span class="legend-label">Chloride</span></div>
+  <div class="legend-item"><span class="ion ion-ca">Ca²⁺</span><span class="legend-label">Calcium</span></div>
+</div>
+
+<div class="tabs" id="tabs"></div>
+<div class="tagline" id="tagline"></div>
+
+<div class="assembly">
+  <div class="flow-label">
+    <span>Filtrate →</span><div class="flow-line"></div><span>→ Final Urine</span>
+  </div>
+  <div class="stations" id="stations"></div>
+</div>
+
+<div class="labs">
+  <div class="labs-card" id="labsCard">
+    <div class="labs-header">
+      <span style="font-size:1.1rem">🩸</span>
+      <span class="labs-title" id="labsTitle">Blood Labs</span>
+    </div>
+    <div id="labRows"></div>
+    <div class="pearl" id="pearl" style="display:none"></div>
+  </div>
+</div>
+
+<div class="compare">
+  <p class="compare-title">📊 Quick Comparison — All Types at a Glance</p>
+  <div class="compare-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th><span class="ion ion-hco3" style="font-size:0.65rem;padding:0.15rem 0.5rem">HCO₃⁻</span></th>
+          <th><span class="ion ion-h" style="font-size:0.65rem;padding:0.15rem 0.5rem">H⁺</span></th>
+          <th><span class="ion ion-k" style="font-size:0.65rem;padding:0.15rem 0.5rem">K⁺</span></th>
+          <th>Urine pH</th>
+          <th>Defect</th>
+        </tr>
+      </thead>
+      <tbody id="compareBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<p class="footer">Bone Wizardry — RTA Assembly Line</p>
+
+<script>
+const DATA = {
+  normal: {
+    label: "Normal", emoji: "✅", tagline: "Everything works.", color: "#22c55e",
+    proximal: { status: "ok", text: "Reabsorbs HCO₃⁻", icon: "↩️", detail: "Base saved → blood" },
+    loop: { status: "ok", text: "Reabsorbs Cl⁻, Ca²⁺", icon: "↩️", detail: "Normal reabsorption" },
+    collecting: { status: "ok", text: "Secretes H⁺ & K⁺", icon: "🚀", detail: "Acid & K⁺ dumped → urine" },
+    urine: { ph: "Normal pH", phDetail: "4.5 – 6.0" },
+    labs: { hco3: "Normal", h: "Normal", k: "Normal" },
+    pearl: ""
+  },
+  type2: {
+    label: "Type 2 RTA", emoji: "🚨", tagline: "Proximal Leak — Lost the base early on.", color: "#f59e0b",
+    proximal: { status: "broken", text: "HCO₃⁻ LEAKS OUT", icon: "💧", detail: "Base washes into urine!" },
+    loop: { status: "ok", text: "Works normally", icon: "↩️", detail: "Cl⁻ & Ca²⁺ fine" },
+    collecting: { status: "ok", text: "Works normally", icon: "🚀", detail: "H⁺ & K⁺ secretion intact" },
+    urine: { ph: "Acidic", phDetail: "< 5.5" },
+    labs: { hco3: "↓ LOW", h: "↑ HIGH", k: "↓ LOW" },
+    pearl: "Urine pH < 5.5 — the collecting duct CAN still acidify. The problem is upstream (HCO₃⁻ leak)."
+  },
+  type1: {
+    label: "Type 1 RTA", emoji: "🚨", tagline: "Distal Block — Trapped the acid at the end.", color: "#ef4444",
+    proximal: { status: "ok", text: "Works normally", icon: "↩️", detail: "HCO₃⁻ reabsorbed fine" },
+    loop: { status: "ok", text: "Works normally", icon: "↩️", detail: "Cl⁻ & Ca²⁺ fine" },
+    collecting: { status: "broken", text: "H⁺ BLOCKED!", icon: "🚫", detail: "Acid trapped in blood!" },
+    urine: { ph: "BASIC", phDetail: "ALWAYS > 5.5" },
+    labs: { hco3: "Normal/↓", h: "↑↑ VERY HIGH", k: "↓ LOW" },
+    pearl: "Urine pH ALWAYS > 5.5 — the collecting duct CANNOT acidify. This is the big board differentiator."
+  },
+  type4: {
+    label: "Type 4 RTA", emoji: "🚨", tagline: "Aldosterone Failure — Trapped the bananas at the end! 🍌", color: "#a855f7",
+    proximal: { status: "ok", text: "Works normally", icon: "↩️", detail: "HCO₃⁻ reabsorbed fine" },
+    loop: { status: "ok", text: "Works normally", icon: "↩️", detail: "Cl⁻ & Ca²⁺ fine" },
+    collecting: { status: "broken", text: "H⁺ & K⁺ BLOCKED!", icon: "🚫", detail: "Both trapped in blood!" },
+    urine: { ph: "Acidic", phDetail: "< 5.5" },
+    labs: { hco3: "Normal/↓", h: "↑ HIGH", k: "↑↑ VERY HIGH" },
+    pearl: "Hyperkalemia is the hallmark. No aldosterone = can't dump K⁺ OR H⁺. Think 'banana backup.' 🍌"
+  }
+};
+
+const TYPES = ["normal", "type2", "type1", "type4"];
+let active = "normal";
+
+function render() {
+  const d = DATA[active];
+
+  // Title gradient
+  const title = document.getElementById("mainTitle");
+  title.style.background = `linear-gradient(135deg, ${d.color}, #fff)`;
+  title.style.webkitBackgroundClip = "text";
+  title.style.webkitTextFillColor = "transparent";
+
+  // Tabs
+  const tabsEl = document.getElementById("tabs");
+  tabsEl.innerHTML = TYPES.map(t => {
+    const item = DATA[t];
+    const isActive = active === t;
+    return `<button class="tab ${isActive ? 'active' : ''}" data-type="${t}"
+      style="${isActive ? `border-color:${item.color};background:${item.color}22;color:${item.color};--tc33:${item.color}33` : ''}"
+    >${item.emoji} ${item.label}</button>`;
+  }).join("");
+  tabsEl.querySelectorAll(".tab").forEach(btn => btn.addEventListener("click", () => { active = btn.dataset.type; render(); }));
+
+  // Tagline
+  const tagEl = document.getElementById("tagline");
+  tagEl.style.background = d.color + "15";
+  tagEl.style.border = `1px solid ${d.color}44`;
+  tagEl.style.color = d.color;
+  tagEl.textContent = d.tagline;
+
+  // Stations
+  const stationsEl = document.getElementById("stations");
+  const stationData = [
+    { title: "Proximal Tubule", data: d.proximal },
+    null,
+    { title: "Loop & Distal", data: d.loop },
+    null,
+    { title: "Collecting Duct", data: d.collecting },
+    null,
+    { title: "Urine", data: null }
+  ];
+  stationsEl.innerHTML = stationData.map((s, i) => {
+    if (s === null) return `<div class="arrow-cell">→</div>`;
+    if (s.title === "Urine") {
+      return `<div class="station urine-station" style="border-color:${d.color};background:${d.color}10;box-shadow:0 0 24px ${d.color}22">
+        <div class="station-header"><span class="station-icon">🧪</span><span class="station-title">Urine</span></div>
+        <div class="urine-ph" style="color:${d.color}">${d.urine.ph}</div>
+        <div class="station-detail">${d.urine.phDetail}</div>
+      </div>`;
+    }
+    const broken = s.data.status === "broken";
+    const cls = broken ? "broken" : "ok-active";
+    return `<div class="station ${cls}" style="--tc:${d.color};--tc33:${d.color}33;${broken ? '' : `border-color:${d.color}`}">
+      <div class="station-header"><span class="station-icon">${s.data.icon}</span><span class="station-title">${s.title}</span></div>
+      <div class="station-text">${s.data.text}</div>
+      <div class="station-detail">${s.data.detail}</div>
+      ${broken ? '<div class="defect-badge">⚠ DEFECT HERE</div>' : ''}
+    </div>`;
+  }).join("");
+
+  // Labs
+  const labsCard = document.getElementById("labsCard");
+  labsCard.style.borderColor = d.color + "44";
+  labsCard.style.boxShadow = `0 0 30px ${d.color}11`;
+  document.getElementById("labsTitle").textContent = `Blood Labs — ${d.label}`;
+
+  const ions = [
+    { key: "hco3", sym: "HCO₃⁻", cls: "ion-hco3", label: "Base" },
+    { key: "h", sym: "H⁺", cls: "ion-h", label: "Acid" },
+    { key: "k", sym: "K⁺", cls: "ion-k", label: "Potassium" }
+  ];
+  document.getElementById("labRows").innerHTML = ions.map(ion => {
+    const val = d.labs[ion.key];
+    const abn = val !== "Normal";
+    return `<div class="lab-row ${abn ? 'abnormal' : 'normal-row'}">
+      <div class="lab-left"><span class="ion ${ion.cls}" style="font-size:0.65rem;padding:0.15rem 0.5rem">${ion.sym}</span><span class="lab-label">${ion.label}</span></div>
+      <span class="lab-value ${abn ? 'abnormal' : 'normal-val'}">${val}</span>
+    </div>`;
+  }).join("");
+
+  const pearlEl = document.getElementById("pearl");
+  if (d.pearl) {
+    pearlEl.style.display = "block";
+    pearlEl.style.background = d.color + "11";
+    pearlEl.style.border = `1px solid ${d.color}33`;
+    pearlEl.innerHTML = `<span class="pearl-key" style="color:${d.color}">Key Pearl: </span><span class="pearl-text">${d.pearl}</span>`;
+  } else {
+    pearlEl.style.display = "none";
+  }
+
+  // Compare table
+  document.getElementById("compareBody").innerHTML = TYPES.map(t => {
+    const r = DATA[t];
+    const sel = active === t;
+    return `<tr class="${sel ? 'selected' : ''}" data-type="${t}" style="--row-color:${r.color};${sel ? `background:${r.color}15` : ''}">
+      <td style="font-weight:700;color:${r.color};text-align:left">${r.emoji} ${r.label}</td>
+      <td style="font-weight:700">${r.labs.hco3}</td>
+      <td style="font-weight:700">${r.labs.h}</td>
+      <td style="font-weight:700">${r.labs.k}</td>
+      <td style="font-weight:700;color:${r.color}">${r.urine.phDetail}</td>
+      <td>${r.tagline}</td>
+    </tr>`;
+  }).join("");
+  document.querySelectorAll("#compareBody tr").forEach(row => row.addEventListener("click", () => { active = row.dataset.type; render(); }));
+}
+
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bone Wizardry — COMLEX Review</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'JetBrains Mono', monospace;
+    background: linear-gradient(180deg, #020617 0%, #0f172a 100%);
+    color: #e2e8f0; min-height: 100vh; padding: 2rem 1rem;
+  }
+  a { text-decoration: none; color: inherit; }
+
+  .header { text-align: center; margin-bottom: 2.5rem; }
+  .header-sub { color: #64748b; font-size: 0.65rem; letter-spacing: 0.5em; text-transform: uppercase; margin-bottom: 0.5rem; }
+  .header h1 {
+    font-size: 2.2rem; font-weight: 900;
+    background: linear-gradient(135deg, #a855f7, #3b82f6, #22c55e, #eab308, #ef4444);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .header-desc { color: #64748b; font-size: 0.75rem; margin-top: 0.5rem; }
+  .header-url { color: #475569; font-size: 0.7rem; margin-top: 0.25rem; }
+
+  /* Subject grid */
+  .subjects { max-width: 64rem; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 1rem; }
+
+  .subject-card {
+    border: 2px solid #1e293b; border-radius: 1rem; padding: 1.25rem; background: #0f172a;
+    transition: all 0.35s; cursor: pointer; position: relative; overflow: hidden;
+  }
+  .subject-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: var(--c); opacity: 0; transition: opacity 0.3s;
+  }
+  .subject-card:hover { border-color: var(--c); transform: translateY(-3px); box-shadow: 0 8px 30px color-mix(in srgb, var(--c) 15%, transparent); }
+  .subject-card:hover::before { opacity: 1; }
+  .subject-card.has-content { border-color: #334155; }
+  .subject-card.empty { opacity: 0.5; }
+
+  .card-icon { font-size: 1.75rem; margin-bottom: 0.75rem; }
+  .card-acro { font-weight: 800; font-size: 1rem; color: var(--c); margin-bottom: 0.25rem; }
+  .card-name { font-size: 0.75rem; color: #94a3b8; margin-bottom: 0.75rem; }
+  .card-topics { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+  .topic-tag {
+    padding: 0.15rem 0.5rem; border-radius: 9999px; font-size: 0.6rem; font-weight: 700;
+    background: color-mix(in srgb, var(--c) 15%, transparent);
+    color: var(--c); border: 1px solid color-mix(in srgb, var(--c) 30%, transparent);
+    transition: all 0.2s;
+  }
+  .topic-tag:hover { background: color-mix(in srgb, var(--c) 25%, transparent); }
+  .empty-label { font-size: 0.65rem; color: #334155; font-style: italic; }
+  .card-path { font-size: 0.6rem; color: #334155; margin-top: 0.5rem; font-weight: 600; }
+
+  /* Recent section */
+  .recent { max-width: 64rem; margin: 2.5rem auto 0; }
+  .section-title { color: #64748b; font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 1rem; }
+  .recent-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+  .recent-card {
+    border: 2px solid #1e293b; border-radius: 1rem; padding: 1.25rem; background: #0f172a;
+    transition: all 0.3s; display: flex; align-items: center; gap: 1rem;
+  }
+  .recent-card:hover { border-color: var(--c); box-shadow: 0 4px 20px color-mix(in srgb, var(--c) 10%, transparent); }
+  .recent-icon { font-size: 1.5rem; flex-shrink: 0; }
+  .recent-info { flex: 1; }
+  .recent-title { font-weight: 700; font-size: 0.85rem; color: #f1f5f9; }
+  .recent-path { font-size: 0.65rem; color: #475569; margin-top: 0.15rem; }
+  .recent-desc { font-size: 0.7rem; color: #64748b; margin-top: 0.25rem; }
+
+  .footer { text-align: center; color: #334155; font-size: 0.7rem; margin-top: 3rem; letter-spacing: 0.1em; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <p class="header-sub">COMLEX Level 1 + 2</p>
+  <h1>Bone Wizardry</h1>
+  <p class="header-desc">Tap a subject to explore. Topics with content are highlighted.</p>
+  <p class="header-url">bonewizardry.com</p>
+</div>
+
+<div class="subjects">
+
+  <a href="renal/index.html" class="subject-card has-content" style="--c: #3b82f6">
+    <div class="card-icon">&#129516;</div>
+    <div class="card-acro">RENAL</div>
+    <div class="card-name">Renal System</div>
+    <div class="card-topics">
+      <span class="topic-tag">RTA</span>
+    </div>
+    <div class="card-path">/renal/</div>
+  </a>
+
+  <div class="subject-card empty" style="--c: #ef4444">
+    <div class="card-icon">&#129728;</div>
+    <div class="card-acro">CARDIO</div>
+    <div class="card-name">Cardiovascular</div>
+    <div class="empty-label">coming soon</div>
+    <div class="card-path">/cardio/</div>
+  </div>
+
+  <div class="subject-card empty" style="--c: #22c55e">
+    <div class="card-icon">&#129516;</div>
+    <div class="card-acro">RESP</div>
+    <div class="card-name">Respiratory</div>
+    <div class="empty-label">coming soon</div>
+    <div class="card-path">/resp/</div>
+  </div>
+
+  <div class="subject-card empty" style="--c: #f59e0b">
+    <div class="card-icon">&#127860;</div>
+    <div class="card-acro">GI</div>
+    <div class="card-name">Gastrointestinal</div>
+    <div class="empty-label">coming soon</div>
+    <div class="card-path">/gi/</div>
+  </div>
+
+  <div class="subject-card empty" style="--c: #a855f7">
+    <div class="card-icon">&#129504;</div>
+    <div class="card-acro">NEURO</div>
+    <div class="card-name">Neuroscience</div>
+    <div class="empty-label">coming soon</div>
+    <div class="card-path">/neuro/</div>
+  </div>
+
+  <div class="subject-card empty" style="--c: #ec4899">
+    <div class="card-icon">&#129516;</div>
+    <div class="card-acro">ENDO</div>
+    <div class="card-name">Endocrine</div>
+    <div class="empty-label">coming soon</div>
+    <div class="card-path">/endo/</div>
+  </div>
+
+  <div class="subject-card empty" style="--c: #14b8a6">
+    <div class="card-icon">&#129516;</div>
+    <div class="card-acro">HEME</div>
+    <div class="card-name">Hematology / Oncology</div>
+    <div class="empty-label">coming soon</div>
+    <div class="card-path">/heme/</div>
+  </div>
+
+  <div class="subject-card empty" style="--c: #f97316">
+    <div class="card-icon">&#129516;</div>
+    <div class="card-acro">MSK</div>
+    <div class="card-name">Musculoskeletal</div>
+    <div class="empty-label">coming soon</div>
+    <div class="card-path">/msk/</div>
+  </div>
+
+  <div class="subject-card empty" style="--c: #06b6d4">
+    <div class="card-icon">&#128137;</div>
+    <div class="card-acro">MICRO</div>
+    <div class="card-name">Microbiology</div>
+    <div class="empty-label">coming soon</div>
+    <div class="card-path">/micro/</div>
+  </div>
+
+  <div class="subject-card empty" style="--c: #84cc16">
+    <div class="card-icon">&#128138;</div>
+    <div class="card-acro">PHARM</div>
+    <div class="card-name">Pharmacology</div>
+    <div class="empty-label">coming soon</div>
+    <div class="card-path">/pharm/</div>
+  </div>
+
+  <div class="subject-card empty" style="--c: #eab308">
+    <div class="card-icon">&#129516;</div>
+    <div class="card-acro">PATH</div>
+    <div class="card-name">Pathology</div>
+    <div class="empty-label">coming soon</div>
+    <div class="card-path">/path/</div>
+  </div>
+
+  <div class="subject-card empty" style="--c: #8b5cf6">
+    <div class="card-icon">&#128704;</div>
+    <div class="card-acro">OMM</div>
+    <div class="card-name">OMM / OPP</div>
+    <div class="empty-label">coming soon</div>
+    <div class="card-path">/omm/</div>
+  </div>
+
+  <div class="subject-card empty" style="--c: #64748b">
+    <div class="card-icon">&#128202;</div>
+    <div class="card-acro">BIOSTATS</div>
+    <div class="card-name">Biostatistics / Epi</div>
+    <div class="empty-label">coming soon</div>
+    <div class="card-path">/biostats/</div>
+  </div>
+
+  <a href="repro/index.html" class="subject-card has-content" style="--c: #fb923c">
+    <div class="card-icon">&#129328;</div>
+    <div class="card-acro">REPRO</div>
+    <div class="card-name">Reproductive</div>
+    <div class="card-topics">
+      <span class="topic-tag">GYN Infections</span>
+    </div>
+    <div class="card-path">/repro/</div>
+  </a>
+
+  <div class="subject-card empty" style="--c: #38bdf8">
+    <div class="card-icon">&#128118;</div>
+    <div class="card-acro">PEDS</div>
+    <div class="card-name">Pediatrics</div>
+    <div class="empty-label">coming soon</div>
+    <div class="card-path">/peds/</div>
+  </div>
+
+  <div class="subject-card empty" style="--c: #d946ef">
+    <div class="card-icon">&#129504;</div>
+    <div class="card-acro">PSYCH</div>
+    <div class="card-name">Psychiatry / Behavioral</div>
+    <div class="empty-label">coming soon</div>
+    <div class="card-path">/psych/</div>
+  </div>
+
+</div>
+
+<div class="recent">
+  <p class="section-title">&#9889; Recent Additions</p>
+  <div class="recent-grid">
+
+    <a href="renal/rta/index.html" class="recent-card" style="--c: #3b82f6">
+      <div class="recent-icon">&#128736;</div>
+      <div class="recent-info">
+        <div class="recent-title">RTA Assembly Line</div>
+        <div class="recent-path">/renal/rta/</div>
+        <div class="recent-desc">Interactive nephron diagram — see where each RTA breaks</div>
+      </div>
+    </a>
+
+    <a href="renal/rta/deep-dive.html" class="recent-card" style="--c: #a855f7">
+      <div class="recent-icon">&#128218;</div>
+      <div class="recent-info">
+        <div class="recent-title">RTA Deep Dive</div>
+        <div class="recent-path">/renal/rta/deep-dive.html</div>
+        <div class="recent-desc">Chunked learning — vignette, board traps, speed-run cheat sheet</div>
+      </div>
+    </a>
+
+    <a href="repro/gyn-infections/deep-dive.html" class="recent-card" style="--c: #ec4899">
+      <div class="recent-icon">&#128270;</div>
+      <div class="recent-info">
+        <div class="recent-title">The Discharge Detective</div>
+        <div class="recent-path">/repro/gyn-infections/</div>
+        <div class="recent-desc">BV vs Trich vs Candida — battle cards, flowchart, quiz gauntlet</div>
+      </div>
+    </a>
+
+  </div>
+</div>
+
+<p class="footer">Bone Wizardry — COMLEX Review</p>
+
+</body>
+</html>

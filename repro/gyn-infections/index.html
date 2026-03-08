@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GYN Infections — Bone Wizardry</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'JetBrains Mono', monospace;
+    background: linear-gradient(180deg, #020617 0%, #0f172a 100%);
+    color: #e2e8f0; min-height: 100vh; padding: 2rem 1rem;
+  }
+  a { text-decoration: none; color: inherit; }
+
+  .nav { display: flex; justify-content: center; gap: 0.75rem; margin-bottom: 2rem; flex-wrap: wrap; }
+  .nav-link {
+    padding: 0.5rem 1rem; border-radius: 0.75rem; font-size: 0.75rem; font-weight: 700;
+    border: 2px solid #334155; color: #94a3b8; transition: all 0.3s; font-family: inherit;
+  }
+  .nav-link:hover { border-color: #ec4899; color: #ec4899; background: #ec489910; }
+
+  .header { text-align: center; margin-bottom: 2.5rem; }
+  .header-sub { color: #64748b; font-size: 0.65rem; letter-spacing: 0.5em; text-transform: uppercase; margin-bottom: 0.5rem; }
+  .header h1 {
+    font-size: 2rem; font-weight: 900;
+    background: linear-gradient(135deg, #ec4899, #a855f7, #3b82f6);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .header-desc { color: #64748b; font-size: 0.75rem; margin-top: 0.5rem; }
+
+  .cards { max-width: 48rem; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.25rem; }
+  .portal-card {
+    border: 2px solid #1e293b; border-radius: 1.25rem; padding: 1.75rem; background: #0f172a;
+    transition: all 0.35s; cursor: pointer; position: relative; overflow: hidden;
+  }
+  .portal-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: var(--c); opacity: 0; transition: opacity 0.3s;
+  }
+  .portal-card:hover { border-color: var(--c); transform: translateY(-4px); box-shadow: 0 12px 40px color-mix(in srgb, var(--c) 15%, transparent); }
+  .portal-card:hover::before { opacity: 1; }
+
+  .pc-icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+  .pc-name { font-weight: 800; font-size: 1.1rem; color: var(--c); margin-bottom: 0.25rem; }
+  .pc-desc { font-size: 0.75rem; color: #94a3b8; margin-bottom: 0.5rem; }
+  .pc-tag {
+    display: inline-block; padding: 0.15rem 0.5rem; border-radius: 9999px; font-size: 0.6rem; font-weight: 700;
+    background: color-mix(in srgb, var(--c) 15%, transparent);
+    color: var(--c); border: 1px solid color-mix(in srgb, var(--c) 30%, transparent);
+  }
+
+  .footer { text-align: center; color: #334155; font-size: 0.7rem; margin-top: 3rem; letter-spacing: 0.1em; }
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <a href="/" class="nav-link">Home</a>
+  <a href="../index.html" class="nav-link">Repro</a>
+</div>
+
+<div class="header">
+  <p class="header-sub">Bone Wizardry &mdash; Reproductive</p>
+  <h1>GYN Infections</h1>
+  <p class="header-desc">BV vs Trich vs Candida. Know the villains. Solve the case.</p>
+</div>
+
+<div class="cards">
+
+  <a href="deep-dive.html" class="portal-card" style="--c: #ec4899">
+    <div class="pc-icon">&#128270;</div>
+    <div class="pc-name">The Discharge Detective</div>
+    <div class="pc-desc">Battle cards, interactive flowchart, and board exam gauntlet. The full breakdown.</div>
+    <span class="pc-tag">Interactive</span>
+    <span class="pc-tag">Quiz</span>
+  </a>
+
+</div>
+
+<p class="footer">Bone Wizardry &mdash; GYN Infections</p>
+</body>
+</html>
