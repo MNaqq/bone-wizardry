@@ -89,6 +89,31 @@
   .hl-purple { color: #c4b5fd; font-weight: 700; }
   .hl-yellow { color: #fde047; font-weight: 700; }
 
+  /* Diagnosis chain */
+  .dx-chain {
+    margin: 0.75rem 0 1rem; padding: 0.85rem 1rem; border-radius: 0.75rem;
+    background: #0a0f1e; border: 1px solid #1e293b;
+  }
+  .dx-chain-title {
+    font-size: 0.6rem; color: #475569; text-transform: uppercase;
+    letter-spacing: 0.15em; font-weight: 700; margin-bottom: 0.6rem;
+  }
+  .dx-step-row {
+    display: flex; align-items: flex-start; gap: 0.6rem;
+    padding: 0.35rem 0; border-bottom: 1px solid #1e293b18;
+  }
+  .dx-step-row:last-child { border-bottom: none; }
+  .dx-step-badge {
+    width: 1.4rem; height: 1.4rem; border-radius: 50%; display: flex;
+    align-items: center; justify-content: center; font-size: 0.65rem;
+    font-weight: 800; flex-shrink: 0; margin-top: 0.1rem;
+  }
+  .dx-step-text { font-size: 0.75rem; line-height: 1.5; flex: 1; flex-wrap: wrap; }
+  .dx-finding { color: #94a3b8; }
+  .dx-arrow { color: #475569; margin: 0 0.25rem; }
+  .dx-means { color: #64748b; font-style: italic; }
+  .dx-result { font-weight: 700; }
+
   /* Interactive choices */
   .choice-label {
     font-size: 0.7rem; color: #fde047; font-weight: 700;
@@ -226,9 +251,50 @@
         </ul>
       </div>
 
+      <div class="dx-chain">
+        <div class="dx-chain-title">How the student read it</div>
+        <div class="dx-step-row">
+          <div class="dx-step-badge" style="background:#ef444422;color:#fca5a5;">1</div>
+          <div class="dx-step-text">
+            <span class="dx-finding">Deep sulcus on LEFT</span>
+            <span class="dx-arrow">&rarr;</span>
+            <span class="dx-means">sacral base moved anterior on LEFT</span>
+            <span class="dx-arrow">&rarr;</span>
+            <span class="dx-result hl-red">rotation = LEFT</span>
+          </div>
+        </div>
+        <div class="dx-step-row">
+          <div class="dx-step-badge" style="background:#ec489922;color:#f9a8d4;">2</div>
+          <div class="dx-step-text">
+            <span class="dx-finding">Seated flexion positive on LEFT</span>
+            <span class="dx-arrow">&rarr;</span>
+            <span class="dx-means">SI joint restricted on left = left oblique axis engaged</span>
+            <span class="dx-arrow">&rarr;</span>
+            <span class="dx-result hl-pink">axis = LEFT</span>
+          </div>
+        </div>
+        <div class="dx-step-row">
+          <div class="dx-step-badge" style="background:#a855f722;color:#c4b5fd;">3</div>
+          <div class="dx-step-text">
+            <span class="dx-finding">Rotation LEFT on LEFT oblique axis</span>
+            <span class="dx-arrow">&rarr;</span>
+            <span class="dx-result hl-purple">named: <strong>Left on Left</strong></span>
+            <span class="dx-means">&nbsp;(same sides = forward torsion)</span>
+          </div>
+        </div>
+        <div class="dx-step-row">
+          <div class="dx-step-badge" style="background:#22c55e22;color:#86efac;">&#10003;</div>
+          <div class="dx-step-text">
+            <span class="dx-finding">Spring test negative (springs freely)</span>
+            <span class="dx-arrow">&rarr;</span>
+            <span class="dx-result hl-green">confirms forward torsion</span>
+          </div>
+        </div>
+      </div>
+
       <div class="dialogue">
         <span class="speaker speaker-student">Student:</span>
-        <span class="line">"Deep sulcus on the left means the sacral base rotated left. Seated flexion positive on the left means left oblique axis. Left rotation on left oblique axis... left-on-left forward torsion. The spring test confirms it &mdash; it springs, so it's forward."</span>
+        <span class="line">"Left-on-left forward torsion."</span>
         <span class="thought">(They look at you with the energy of a golden retriever who just brought you a stick.)</span>
       </div>
 
