@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sacral Torsion Diagnosis — Bone Wizardry</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'JetBrains Mono', monospace;
+    background: linear-gradient(180deg, #020617 0%, #0f172a 100%);
+    color: #e2e8f0;
+    min-height: 100vh;
+    padding: 2rem 1rem;
+    line-height: 1.6;
+  }
+  a { text-decoration: none; }
+
+  /* Nav */
+  .nav { display: flex; justify-content: center; gap: 0.75rem; margin-bottom: 2rem; flex-wrap: wrap; }
+  .nav-link {
+    padding: 0.5rem 1rem; border-radius: 0.75rem; font-size: 0.75rem; font-weight: 700;
+    border: 2px solid #334155; color: #94a3b8; transition: all 0.3s; cursor: pointer;
+    font-family: inherit;
+  }
+  .nav-link:hover { border-color: #8b5cf6; color: #8b5cf6; background: #8b5cf610; }
+  .nav-link.active { border-color: #8b5cf6; color: #8b5cf6; background: #8b5cf610; }
+
+  .header { text-align: center; margin-bottom: 2rem; }
+  .header-sub { color: #64748b; font-size: 0.7rem; letter-spacing: 0.4em; text-transform: uppercase; margin-bottom: 0.5rem; }
+  .header h1 {
+    font-size: 1.8rem; font-weight: 900;
+    background: linear-gradient(135deg, #8b5cf6, #3b82f6, #22c55e);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .header-desc { color: #64748b; font-size: 0.75rem; margin-top: 0.5rem; max-width: 36rem; margin-left: auto; margin-right: auto; }
+
+  /* Chunk cards */
+  .chunks { max-width: 52rem; margin: 0 auto; }
+  .chunk {
+    border: 2px solid #1e293b; border-radius: 1rem; padding: 1.5rem; margin-bottom: 1.25rem;
+    background: #0f172a; transition: all 0.3s; cursor: pointer; position: relative; overflow: hidden;
+  }
+  .chunk:hover { border-color: #334155; }
+  .chunk.open { border-color: var(--accent); box-shadow: 0 0 30px color-mix(in srgb, var(--accent) 15%, transparent); }
+  .chunk-header { display: flex; align-items: center; gap: 0.75rem; }
+  .chunk-num {
+    width: 2rem; height: 2rem; border-radius: 0.5rem; display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 0.8rem; color: #fff; flex-shrink: 0;
+  }
+  .chunk-title { font-weight: 700; font-size: 0.95rem; color: #f1f5f9; flex: 1; }
+  .chunk-toggle { color: #475569; font-size: 1.2rem; transition: transform 0.3s; }
+  .chunk.open .chunk-toggle { transform: rotate(180deg); }
+  .chunk-body { max-height: 0; overflow: hidden; transition: max-height 0.4s ease, padding 0.3s; }
+  .chunk.open .chunk-body { max-height: 5000px; padding-top: 1rem; }
+
+  /* Content styles */
+  .chunk-body p { color: #94a3b8; font-size: 0.85rem; margin-bottom: 0.75rem; }
+  .chunk-body .highlight {
+    display: inline; padding: 0.1rem 0.4rem; border-radius: 0.25rem; font-weight: 700;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .highlight:hover { filter: brightness(1.3); }
+  .hl-red { background: #ef444425; color: #fca5a5; border: 1px solid #ef444444; }
+  .hl-blue { background: #3b82f625; color: #93c5fd; border: 1px solid #3b82f644; }
+  .hl-yellow { background: #eab30825; color: #fde047; border: 1px solid #eab30844; }
+  .hl-green { background: #22c55e25; color: #86efac; border: 1px solid #22c55e44; }
+  .hl-purple { background: #a855f725; color: #c4b5fd; border: 1px solid #a855f744; }
+  .hl-orange { background: #f59e0b25; color: #fcd34d; border: 1px solid #f59e0b44; }
+  .hl-pink { background: #ec489925; color: #f9a8d4; border: 1px solid #ec489944; }
+  .hl-cyan { background: #06b6d425; color: #67e8f9; border: 1px solid #06b6d444; }
+
+  .key-fact {
+    padding: 0.75rem 1rem; border-radius: 0.75rem; margin: 0.75rem 0; font-size: 0.8rem;
+    font-weight: 600; display: flex; align-items: flex-start; gap: 0.5rem;
+  }
+  .key-fact .icon { font-size: 1rem; flex-shrink: 0; }
+
+  .mini-table { width: 100%; border-collapse: collapse; margin: 0.75rem 0; font-size: 0.75rem; }
+  .mini-table th {
+    padding: 0.6rem 0.75rem; text-align: left; font-weight: 700; font-size: 0.65rem;
+    letter-spacing: 0.1em; text-transform: uppercase; color: #64748b; background: #1e293b;
+  }
+  .mini-table td { padding: 0.6rem 0.75rem; border-bottom: 1px solid #1e293b; color: #cbd5e1; }
+  .mini-table tr:hover { background: #ffffff08; }
+
+  .mnemonic {
+    text-align: center; padding: 1rem; border-radius: 0.75rem; margin: 0.75rem 0;
+    font-weight: 800; font-size: 1.1rem; letter-spacing: 0.05em;
+  }
+
+  /* Tooltips */
+  .tip { position: relative; cursor: help; border-bottom: 1px dashed currentColor; }
+  .tip .tip-text {
+    visibility: hidden; opacity: 0;
+    position: absolute; bottom: 125%; left: 50%; transform: translateX(-50%);
+    background: #1e293b; color: #e2e8f0; border: 1px solid #475569; border-radius: 0.5rem;
+    padding: 0.5rem 0.75rem; font-size: 0.7rem; font-weight: 400; line-height: 1.4;
+    width: max-content; max-width: 280px; z-index: 100;
+    transition: opacity 0.2s, visibility 0.2s;
+    box-shadow: 0 4px 20px #00000066; pointer-events: none;
+  }
+  .tip .tip-text::after {
+    content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+    border: 6px solid transparent; border-top-color: #475569;
+  }
+  .tip:hover .tip-text, .tip:focus .tip-text, .tip.active .tip-text { visibility: visible; opacity: 1; }
+  @media (max-width: 600px) { .tip .tip-text { left: 0; transform: none; max-width: 220px; } }
+
+  /* Interactive Sacral Diagram */
+  .sacrum-diagram { text-align: center; margin: 1rem 0; }
+  .sacrum-svg { max-width: 100%; height: auto; }
+
+  /* Landmark grid */
+  .landmark-grid {
+    display: grid; grid-template-columns: auto 1fr 1fr; gap: 0; margin: 1rem 0;
+    border: 2px solid #334155; border-radius: 0.75rem; overflow: hidden; font-size: 0.8rem;
+  }
+  .landmark-grid .lg-header {
+    background: #1e293b; padding: 0.6rem 0.75rem; font-weight: 700; color: #94a3b8;
+    text-align: center; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em;
+  }
+  .landmark-grid .lg-label {
+    background: #1e293b; padding: 0.6rem 0.75rem; font-weight: 700; color: #94a3b8;
+  }
+  .landmark-grid .lg-cell {
+    padding: 0.6rem 0.75rem; text-align: center; border-left: 1px solid #1e293b;
+    border-top: 1px solid #1e293b; transition: all 0.3s;
+  }
+  .landmark-grid .lg-cell.active { background: color-mix(in srgb, var(--c) 15%, transparent); }
+  .landmark-grid .lg-cell.deep { color: #fca5a5; font-weight: 700; }
+  .landmark-grid .lg-cell.shallow { color: #86efac; font-weight: 700; }
+
+  /* Diagnosis tool */
+  .dx-tool { margin: 1rem 0; }
+  .dx-step {
+    padding: 1rem; border-radius: 0.75rem; margin: 0.75rem 0;
+    border: 2px solid #1e293b; background: #0f172a; transition: all 0.3s;
+  }
+  .dx-step.active { border-color: #8b5cf6; background: #8b5cf608; }
+  .dx-step.completed { border-color: #22c55e44; background: #22c55e08; }
+  .dx-step-label { font-weight: 700; font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.5rem; }
+  .dx-btns { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .dx-btn {
+    padding: 0.5rem 1rem; border-radius: 0.5rem; font-size: 0.75rem; font-weight: 700;
+    border: 2px solid #334155; background: transparent; color: #94a3b8;
+    cursor: pointer; transition: all 0.3s; font-family: inherit;
+  }
+  .dx-btn:hover { border-color: #8b5cf6; color: #8b5cf6; }
+  .dx-btn.selected { border-color: #8b5cf6; color: #8b5cf6; background: #8b5cf615; }
+  .dx-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  .dx-result {
+    margin-top: 1rem; padding: 1.25rem; border-radius: 0.75rem;
+    border: 2px solid #22c55e44; background: #22c55e08;
+    display: none;
+  }
+  .dx-result.show { display: block; }
+  .dx-result h3 { color: #86efac; font-size: 1rem; margin-bottom: 0.5rem; }
+  .dx-result p { color: #94a3b8; font-size: 0.8rem; margin-bottom: 0.5rem; }
+  .dx-result .dx-grid {
+    display: grid; grid-template-columns: auto 1fr 1fr; gap: 0;
+    border: 2px solid #334155; border-radius: 0.5rem; overflow: hidden; margin: 0.75rem 0;
+    font-size: 0.75rem;
+  }
+
+  /* Answer cards */
+  .answer-grid { display: grid; gap: 0.75rem; margin: 0.75rem 0; }
+  .answer-card {
+    padding: 1rem; border-radius: 0.75rem; border: 1px solid #1e293b; background: #0f172a;
+    transition: all 0.3s; cursor: pointer;
+  }
+  .answer-card:hover { border-color: #334155; }
+  .answer-card.correct { border-color: #22c55e44; background: #22c55e08; }
+  .answer-card.wrong { border-color: #ef444422; }
+  .answer-letter { font-weight: 800; font-size: 0.8rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem; }
+  .answer-text { color: #94a3b8; font-size: 0.8rem; }
+
+  /* Reset button */
+  .reset-btn {
+    padding: 0.5rem 1.25rem; border-radius: 0.5rem; font-size: 0.75rem; font-weight: 700;
+    border: 2px solid #ef444444; background: #ef444415; color: #fca5a5;
+    cursor: pointer; transition: all 0.3s; font-family: inherit; margin-top: 0.75rem;
+  }
+  .reset-btn:hover { border-color: #ef4444; background: #ef444425; }
+
+  .footer { text-align: center; color: #334155; font-size: 0.7rem; margin-top: 2.5rem; letter-spacing: 0.1em; }
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <a href="/" class="nav-link">Home</a>
+  <a href="../index.html" class="nav-link">OMM Portal</a>
+  <a href="#" class="nav-link active">Sacral Torsion</a>
+</div>
+
+<div class="header">
+  <p class="header-sub">Bone Wizardry — OMM / OPP</p>
+  <h1>Sacral Torsion Diagnosis</h1>
+  <p class="header-desc">Axes, landmarks, flexion tests, and the anterior/posterior confusion — all broken down step by step.</p>
+</div>
+
+<div class="chunks">
+
+  <!-- CHUNK 1: The Oblique Axes -->
+  <div class="chunk" style="--accent: #8b5cf6" onclick="this.classList.toggle('open')">
+    <div class="chunk-header">
+      <div class="chunk-num" style="background: #8b5cf6">1</div>
+      <div class="chunk-title">The Two Oblique Axes</div>
+      <div class="chunk-toggle">&#9660;</div>
+    </div>
+    <div class="chunk-body">
+      <p>The sacrum rotates around <span class="highlight hl-purple">two oblique axes</span> that run diagonally across it:</p>
+      <div class="key-fact" style="background: #3b82f612; border: 1px solid #3b82f633; color: #93c5fd;">
+        <span class="icon">&#8599;</span>
+        <span><strong>Left Oblique Axis</strong> — runs from the <span class="highlight hl-blue">upper left</span> to the <span class="highlight hl-blue">lower right</span> of the sacrum. Named for where it <em>starts</em> (superior pole = left).</span>
+      </div>
+      <div class="key-fact" style="background: #ef444412; border: 1px solid #ef444433; color: #fca5a5;">
+        <span class="icon">&#8598;</span>
+        <span><strong>Right Oblique Axis</strong> — runs from the <span class="highlight hl-red">upper right</span> to the <span class="highlight hl-red">lower left</span> of the sacrum. Named for where it <em>starts</em> (superior pole = right).</span>
+      </div>
+      <p>Think of it like this: the axis is named for the <span class="highlight hl-yellow">superior (top) attachment</span> side. Left oblique = left SI joint on top.</p>
+
+      <div class="sacrum-diagram">
+        <svg class="sacrum-svg" viewBox="0 0 320 240" xmlns="http://www.w3.org/2000/svg">
+          <!-- Sacrum body -->
+          <path d="M100,40 L220,40 Q240,40 240,60 L230,180 Q225,200 210,210 L160,220 L110,210 Q95,200 90,180 L80,60 Q80,40 100,40 Z" fill="#1e293b" stroke="#475569" stroke-width="2"/>
+          <!-- Left oblique axis -->
+          <line x1="105" y1="50" x2="225" y2="200" stroke="#3b82f6" stroke-width="3" stroke-dasharray="8,4" opacity="0.8"/>
+          <text x="85" y="45" fill="#93c5fd" font-size="11" font-weight="700" font-family="monospace">L</text>
+          <text x="228" y="210" fill="#93c5fd" font-size="11" font-weight="700" font-family="monospace">R</text>
+          <text x="145" y="100" fill="#3b82f6" font-size="10" font-weight="700" font-family="monospace" transform="rotate(35, 145, 100)">L oblique</text>
+          <!-- Right oblique axis -->
+          <line x1="215" y1="50" x2="95" y2="200" stroke="#ef4444" stroke-width="3" stroke-dasharray="8,4" opacity="0.8"/>
+          <text x="220" y="45" fill="#fca5a5" font-size="11" font-weight="700" font-family="monospace">R</text>
+          <text x="75" y="210" fill="#fca5a5" font-size="11" font-weight="700" font-family="monospace">L</text>
+          <text x="130" y="160" fill="#ef4444" font-size="10" font-weight="700" font-family="monospace" transform="rotate(-35, 130, 160)">R oblique</text>
+          <!-- SI joints -->
+          <ellipse cx="85" cy="55" rx="12" ry="20" fill="none" stroke="#64748b" stroke-width="1.5" stroke-dasharray="3,3"/>
+          <text x="50" y="60" fill="#64748b" font-size="8" font-family="monospace">L SI</text>
+          <ellipse cx="235" cy="55" rx="12" ry="20" fill="none" stroke="#64748b" stroke-width="1.5" stroke-dasharray="3,3"/>
+          <text x="252" y="60" fill="#64748b" font-size="8" font-family="monospace">R SI</text>
+          <!-- Labels -->
+          <text x="160" y="25" text-anchor="middle" fill="#94a3b8" font-size="11" font-weight="700" font-family="monospace">SACRUM (Posterior View)</text>
+          <text x="160" y="235" text-anchor="middle" fill="#475569" font-size="9" font-family="monospace">Apex (inferior)</text>
+          <text x="160" y="13" text-anchor="middle" fill="#475569" font-size="9" font-family="monospace">Base (superior)</text>
+          <!-- Sacral sulci markers -->
+          <circle cx="110" cy="52" r="4" fill="#8b5cf6" opacity="0.6"/>
+          <circle cx="210" cy="52" r="4" fill="#8b5cf6" opacity="0.6"/>
+          <text x="110" y="75" text-anchor="middle" fill="#8b5cf6" font-size="7" font-family="monospace">sulcus</text>
+          <text x="210" y="75" text-anchor="middle" fill="#8b5cf6" font-size="7" font-family="monospace">sulcus</text>
+          <!-- ILA markers -->
+          <circle cx="115" cy="195" r="4" fill="#f59e0b" opacity="0.6"/>
+          <circle cx="205" cy="195" r="4" fill="#f59e0b" opacity="0.6"/>
+          <text x="115" y="188" text-anchor="middle" fill="#f59e0b" font-size="7" font-family="monospace">ILA</text>
+          <text x="205" y="188" text-anchor="middle" fill="#f59e0b" font-size="7" font-family="monospace">ILA</text>
+        </svg>
+      </div>
+
+      <div class="key-fact" style="background: #eab30812; border: 1px solid #eab30833; color: #fde047;">
+        <span class="icon">&#128161;</span>
+        <span>The sacrum <strong>engages</strong> the opposite axis during gait. When you walk and your trunk rotates left, the sacrum rotates on the <span class="highlight hl-red">right oblique axis</span>. This is normal physiologic motion.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHUNK 2: Naming Torsions -->
+  <div class="chunk" style="--accent: #3b82f6" onclick="this.classList.toggle('open')">
+    <div class="chunk-header">
+      <div class="chunk-num" style="background: #3b82f6">2</div>
+      <div class="chunk-title">Naming a Torsion: "X on X"</div>
+      <div class="chunk-toggle">&#9660;</div>
+    </div>
+    <div class="chunk-body">
+      <p>A sacral torsion is named by <span class="highlight hl-blue">two things</span>:</p>
+      <div class="key-fact" style="background: #3b82f612; border: 1px solid #3b82f633; color: #93c5fd;">
+        <span class="icon">1.</span>
+        <span>The <strong>direction of rotation</strong> — which way the sacral base rotated (Left or Right)</span>
+      </div>
+      <div class="key-fact" style="background: #a855f712; border: 1px solid #a855f733; color: #c4b5fd;">
+        <span class="icon">2.</span>
+        <span>The <strong>axis</strong> it rotated around — Left oblique or Right oblique</span>
+      </div>
+      <p>Format: <span class="highlight hl-purple">Rotation ON Axis</span></p>
+      <div class="mnemonic" style="background: #8b5cf615; border: 1px solid #8b5cf633; color: #c4b5fd;">
+        "Left on Left" = Rotated LEFT on LEFT oblique axis
+      </div>
+
+      <p style="font-weight: 700; color: #f1f5f9; margin-top: 0.5rem;">The four sacral torsions:</p>
+      <table class="mini-table">
+        <tr><th>Torsion</th><th>Rotation</th><th>Axis</th><th>Type</th></tr>
+        <tr><td><span class="highlight hl-green">L on L</span></td><td>Left</td><td>Left oblique</td><td><span class="highlight hl-green">Forward (physiologic)</span></td></tr>
+        <tr><td><span class="highlight hl-green">R on R</span></td><td>Right</td><td>Right oblique</td><td><span class="highlight hl-green">Forward (physiologic)</span></td></tr>
+        <tr><td><span class="highlight hl-red">L on R</span></td><td>Left</td><td>Right oblique</td><td><span class="highlight hl-red">Backward (non-physiologic)</span></td></tr>
+        <tr><td><span class="highlight hl-red">R on L</span></td><td>Right</td><td>Left oblique</td><td><span class="highlight hl-red">Backward (non-physiologic)</span></td></tr>
+      </table>
+
+      <div class="key-fact" style="background: #22c55e12; border: 1px solid #22c55e33; color: #86efac;">
+        <span class="icon">&#128161;</span>
+        <span><strong>Same = Forward. Different = Backward.</strong> If the rotation and axis are on the <span class="highlight hl-green">SAME side</span> (L on L, R on R) = forward/physiologic torsion. If they're on <span class="highlight hl-red">DIFFERENT sides</span> (L on R, R on L) = backward/non-physiologic.</span>
+      </div>
+
+      <p style="font-weight: 700; color: #f1f5f9; margin-top: 0.5rem;">Why "forward" vs "backward"?</p>
+      <p>In a <span class="highlight hl-green">forward torsion</span>, the sacral base on the rotation side moves <span class="tip">anteriorly<span class="tip-text">Anterior = toward the front of the body. When you feel a DEEP sacral sulcus from behind, the base moved FORWARD (anterior) into the body. Deep from behind = anterior movement.</span></span> (into the body). This happens during normal gait — it's physiologic.</p>
+      <p>In a <span class="highlight hl-red">backward torsion</span>, the sacral base on the rotation side moves <span class="tip">posteriorly<span class="tip-text">Posterior = toward the back. When you feel a SHALLOW sacral sulcus, the base moved backward toward your fingers. Shallow = posterior = closer to the surface.</span></span>. This is non-physiologic and usually from trauma or strain.</p>
+    </div>
+  </div>
+
+  <!-- CHUNK 3: The Landmark Exam -->
+  <div class="chunk" style="--accent: #f59e0b" onclick="event.target.closest('.dx-btn') || event.target.closest('.reset-btn') || this.classList.toggle('open')">
+    <div class="chunk-header">
+      <div class="chunk-num" style="background: #f59e0b">3</div>
+      <div class="chunk-title">Landmark Findings — The 2x2 Grid</div>
+      <div class="chunk-toggle">&#9660;</div>
+    </div>
+    <div class="chunk-body">
+      <p>You palpate <span class="highlight hl-yellow">four landmarks</span> from behind the patient:</p>
+      <div class="key-fact" style="background: #8b5cf612; border: 1px solid #8b5cf633; color: #c4b5fd;">
+        <span class="icon">&#9757;</span>
+        <span><strong>Sacral Sulcus</strong> (L + R) — the groove between the sacrum and the ilium, near the base. You're feeling for <span class="highlight hl-purple">deep vs shallow</span>.</span>
+      </div>
+      <div class="key-fact" style="background: #f59e0b12; border: 1px solid #f59e0b33; color: #fcd34d;">
+        <span class="icon">&#9757;</span>
+        <span><strong>ILA</strong> — Inferior Lateral Angle (L + R) — the bottom corners of the sacrum. You're feeling for <span class="highlight hl-orange">posterior (prominent) vs anterior (less prominent)</span>.</span>
+      </div>
+
+      <p style="font-weight: 700; color: #f1f5f9; margin-top: 0.75rem;">The critical translation (this trips everyone up):</p>
+
+      <div class="key-fact" style="background: #ef444412; border: 1px solid #ef444433; color: #fca5a5;">
+        <span class="icon">&#9888;</span>
+        <span><strong>Deep sulcus = base went ANTERIOR</strong> (forward, into the body). You feel it as deep because the bone moved AWAY from your fingers. Even though you're touching the patient's BACK, "deep" means the structure went toward the FRONT.</span>
+      </div>
+      <div class="key-fact" style="background: #22c55e12; border: 1px solid #22c55e33; color: #86efac;">
+        <span class="icon">&#9757;</span>
+        <span><strong>Shallow sulcus = base went POSTERIOR</strong> (backward, toward you). You feel it as shallow/full because the bone came TOWARD your fingers.</span>
+      </div>
+
+      <p style="font-weight: 700; color: #f1f5f9; margin-top: 0.75rem;">Master grid for all four torsions:</p>
+
+      <table class="mini-table">
+        <tr><th>Torsion</th><th>L Sulcus</th><th>R Sulcus</th><th>L ILA</th><th>R ILA</th><th>Type</th></tr>
+        <tr>
+          <td><span class="highlight hl-green">L on L</span></td>
+          <td><span class="highlight hl-red">Deep</span></td>
+          <td><span class="highlight hl-green">Shallow</span></td>
+          <td>Anterior (less prominent)</td>
+          <td><span class="highlight hl-orange">Posterior (prominent)</span></td>
+          <td>Forward</td>
+        </tr>
+        <tr>
+          <td><span class="highlight hl-green">R on R</span></td>
+          <td><span class="highlight hl-green">Shallow</span></td>
+          <td><span class="highlight hl-red">Deep</span></td>
+          <td><span class="highlight hl-orange">Posterior (prominent)</span></td>
+          <td>Anterior (less prominent)</td>
+          <td>Forward</td>
+        </tr>
+        <tr>
+          <td><span class="highlight hl-red">L on R</span></td>
+          <td><span class="highlight hl-green">Shallow</span></td>
+          <td><span class="highlight hl-red">Deep</span></td>
+          <td><span class="highlight hl-orange">Posterior (prominent)</span></td>
+          <td>Anterior (less prominent)</td>
+          <td>Backward</td>
+        </tr>
+        <tr>
+          <td><span class="highlight hl-red">R on L</span></td>
+          <td><span class="highlight hl-red">Deep</span></td>
+          <td><span class="highlight hl-green">Shallow</span></td>
+          <td>Anterior (less prominent)</td>
+          <td><span class="highlight hl-orange">Posterior (prominent)</span></td>
+          <td>Backward</td>
+        </tr>
+      </table>
+
+      <div class="key-fact" style="background: #eab30812; border: 1px solid #eab30833; color: #fde047;">
+        <span class="icon">&#128161;</span>
+        <span><strong>Pattern:</strong> The deep sulcus and the posterior ILA are always on <span class="highlight hl-yellow">opposite sides</span>. Deep sulcus = base went forward on that side; posterior ILA = inferior pole kicked backward on the OPPOSITE side. They're the same rotation viewed from two ends of the sacrum.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHUNK 4: Seated Flexion Test -->
+  <div class="chunk" style="--accent: #ec4899" onclick="this.classList.toggle('open')">
+    <div class="chunk-header">
+      <div class="chunk-num" style="background: #ec4899">4</div>
+      <div class="chunk-title">Seated vs Standing Flexion Test</div>
+      <div class="chunk-toggle">&#9660;</div>
+    </div>
+    <div class="chunk-body">
+      <p>These tests tell you <span class="highlight hl-pink">WHERE the dysfunction is</span> — sacral vs iliac:</p>
+
+      <div class="key-fact" style="background: #ec489912; border: 1px solid #ec489933; color: #f9a8d4;">
+        <span class="icon">&#129676;</span>
+        <span><strong>Seated Flexion Test</strong> — patient sits (takes the ilia/pelvis out of the equation). If positive on one side, the problem is at the <span class="highlight hl-pink">SACRUM</span> (sacroiliac joint). The PSIS that rises more = the restricted side.</span>
+      </div>
+      <div class="key-fact" style="background: #3b82f612; border: 1px solid #3b82f633; color: #93c5fd;">
+        <span class="icon">&#129485;</span>
+        <span><strong>Standing Flexion Test</strong> — patient stands (includes iliac motion). If positive on one side, the problem could be <span class="highlight hl-blue">iliac OR sacral</span>. Need seated test to differentiate.</span>
+      </div>
+
+      <p style="font-weight: 700; color: #f1f5f9; margin-top: 0.75rem;">For sacral torsions specifically:</p>
+
+      <div class="key-fact" style="background: #8b5cf612; border: 1px solid #8b5cf633; color: #c4b5fd;">
+        <span class="icon">&#128270;</span>
+        <span>A <span class="highlight hl-purple">positive SEATED flexion test</span> confirms sacral involvement. The side that's positive = the side of the <span class="highlight hl-purple">axis</span> (the oblique axis engages that SI joint). For R on R torsion, the seated flexion test is positive on the <span class="highlight hl-red">RIGHT</span>.</span>
+      </div>
+
+      <table class="mini-table">
+        <tr><th>Torsion</th><th>Positive Seated Flexion</th><th>Axis</th></tr>
+        <tr><td><span class="highlight hl-green">L on L</span></td><td>Left</td><td>Left oblique</td></tr>
+        <tr><td><span class="highlight hl-green">R on R</span></td><td>Right</td><td>Right oblique</td></tr>
+        <tr><td><span class="highlight hl-red">L on R</span></td><td>Right</td><td>Right oblique</td></tr>
+        <tr><td><span class="highlight hl-red">R on L</span></td><td>Left</td><td>Left oblique</td></tr>
+      </table>
+
+      <div class="key-fact" style="background: #eab30812; border: 1px solid #eab30833; color: #fde047;">
+        <span class="icon">&#128161;</span>
+        <span><strong>The seated flexion test tells you the AXIS, not the rotation direction.</strong> The positive side = the axis name. You need the sulcus/ILA findings to determine which direction the sacrum rotated.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHUNK 5: L5 Coupling -->
+  <div class="chunk" style="--accent: #06b6d4" onclick="this.classList.toggle('open')">
+    <div class="chunk-header">
+      <div class="chunk-num" style="background: #06b6d4">5</div>
+      <div class="chunk-title">L5 Coupling — The Confirmation Rule</div>
+      <div class="chunk-toggle">&#9660;</div>
+    </div>
+    <div class="chunk-body">
+      <p>In a sacral torsion, <span class="highlight hl-cyan">L5 rotates opposite to the sacrum</span>. This is a coupling rule you can use to confirm your diagnosis.</p>
+
+      <div class="key-fact" style="background: #06b6d412; border: 1px solid #06b6d433; color: #67e8f9;">
+        <span class="icon">&#128260;</span>
+        <span><strong>Forward torsion (physiologic):</strong> L5 rotates to the <span class="highlight hl-cyan">OPPOSITE</span> side of the sacral rotation. R on R torsion = L5 rotated LEFT. L on L torsion = L5 rotated RIGHT.</span>
+      </div>
+
+      <div class="key-fact" style="background: #ef444412; border: 1px solid #ef444433; color: #fca5a5;">
+        <span class="icon">&#128260;</span>
+        <span><strong>Backward torsion (non-physiologic):</strong> L5 rotates to the <span class="highlight hl-red">SAME</span> side as the sacral rotation. R on L torsion = L5 rotated RIGHT. L on R torsion = L5 rotated LEFT.</span>
+      </div>
+
+      <table class="mini-table">
+        <tr><th>Torsion</th><th>L5 Rotation</th><th>Rule</th></tr>
+        <tr><td><span class="highlight hl-green">L on L</span></td><td>Right</td><td>Opposite (forward)</td></tr>
+        <tr><td><span class="highlight hl-green">R on R</span></td><td>Left</td><td>Opposite (forward)</td></tr>
+        <tr><td><span class="highlight hl-red">L on R</span></td><td>Left</td><td>Same (backward)</td></tr>
+        <tr><td><span class="highlight hl-red">R on L</span></td><td>Right</td><td>Same (backward)</td></tr>
+      </table>
+
+      <p style="font-weight: 700; color: #f1f5f9; margin-top: 0.75rem;">Why does this happen?</p>
+      <p>In a <span class="highlight hl-green">forward torsion</span>, the sacrum is moving the way it should during gait. L5 counter-rotates to maintain balance — <span class="tip">Type I mechanics<span class="tip-text">Fryette's Type I: sidebending and rotation occur to OPPOSITE sides. This happens in neutral (group curve). Type I governs the compensatory motion of L5 in forward sacral torsions.</span></span>. In a <span class="highlight hl-red">backward torsion</span>, the sacrum and L5 are stuck moving together — <span class="tip">Type II mechanics<span class="tip-text">Fryette's Type II: sidebending and rotation occur to the SAME side. This happens in flexion or extension (single segment). Type II governs backward torsions where L5 and sacrum are locked together.</span></span>.</p>
+
+      <div class="mnemonic" style="background: #06b6d415; border: 1px solid #06b6d433; color: #67e8f9;">
+        Forward = Fryette Type I (opposite) &nbsp;&nbsp;|&nbsp;&nbsp; Backward = Fryette Type II (same)
+      </div>
+    </div>
+  </div>
+
+  <!-- CHUNK 6: Anterior/Posterior Confusion -->
+  <div class="chunk" style="--accent: #ef4444" onclick="this.classList.toggle('open')">
+    <div class="chunk-header">
+      <div class="chunk-num" style="background: #ef4444">6</div>
+      <div class="chunk-title">The Anterior/Posterior Trap</div>
+      <div class="chunk-toggle">&#9660;</div>
+    </div>
+    <div class="chunk-body">
+      <p>This is the <span class="highlight hl-red">#1 source of confusion</span> for every student learning sacral mechanics. Let's kill it.</p>
+
+      <div class="key-fact" style="background: #ef444412; border: 1px solid #ef444433; color: #fca5a5;">
+        <span class="icon">&#9888;</span>
+        <span><strong>The problem:</strong> You're palpating from the BACK (posterior). A deep sulcus means the bone went FORWARD (anterior). But "forward" and "deep" feel like opposites when you're touching from behind.</span>
+      </div>
+
+      <p style="font-weight: 700; color: #f1f5f9; margin-top: 0.5rem;">The mental model:</p>
+      <p>Imagine you're behind the patient, fingers on the sacral sulcus. Now imagine the sacral base as a seesaw:</p>
+
+      <div class="mnemonic" style="background: #1e293b; border: 1px solid #334155; color: #e2e8f0; font-size: 0.85rem;">
+        <div style="margin-bottom: 0.5rem;">YOUR FINGERS (posterior) &nbsp;&nbsp;&larr;&nbsp; SACRAL BASE &nbsp;&rarr;&nbsp; PATIENT'S BELLY (anterior)</div>
+        <div style="display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap;">
+          <div style="text-align: center;">
+            <div style="color: #fca5a5; font-size: 0.8rem;">Base tips AWAY from you</div>
+            <div style="color: #fca5a5;">= DEEP sulcus</div>
+            <div style="color: #fca5a5;">= ANTERIOR sacral base</div>
+          </div>
+          <div style="text-align: center;">
+            <div style="color: #86efac; font-size: 0.8rem;">Base tips TOWARD you</div>
+            <div style="color: #86efac;">= SHALLOW sulcus</div>
+            <div style="color: #86efac;">= POSTERIOR sacral base</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="key-fact" style="background: #eab30812; border: 1px solid #eab30833; color: #fde047;">
+        <span class="icon">&#128161;</span>
+        <span><strong>Rule: Always think P &rarr; A.</strong> When diagnosing, think about where the sacral base WENT. Deep = it went anterior. Shallow = it stayed posterior. The direction the base moved tells you the rotation.</span>
+      </div>
+
+      <p>For the <span class="highlight hl-orange">ILA</span>, it's the reverse end of the seesaw:</p>
+      <div class="key-fact" style="background: #f59e0b12; border: 1px solid #f59e0b33; color: #fcd34d;">
+        <span class="icon">&#9757;</span>
+        <span><strong>Posterior ILA</strong> = prominent, you can feel it sticking out. The inferior pole kicked BACKWARD (toward you). <strong>Anterior ILA</strong> = tucked in, less palpable. The inferior pole went FORWARD (away from you).</span>
+      </div>
+
+      <p>If the base went anterior on one side (deep sulcus), the ILA on that <span class="highlight hl-yellow">SAME side</span> went anterior too (less prominent). The OPPOSITE ILA kicks posterior (more prominent). It's all one rotation.</p>
+    </div>
+  </div>
+
+  <!-- CHUNK 7: Interactive Diagnosis Tool -->
+  <div class="chunk open" style="--accent: #22c55e" onclick="event.target.closest('.dx-btn') || event.target.closest('.reset-btn') || this.classList.toggle('open')">
+    <div class="chunk-header">
+      <div class="chunk-num" style="background: #22c55e">&#128736;</div>
+      <div class="chunk-title">Interactive Diagnosis Tool</div>
+      <div class="chunk-toggle">&#9660;</div>
+    </div>
+    <div class="chunk-body">
+      <p>Work through the diagnosis step by step. Pick your findings and get the torsion.</p>
+
+      <div class="dx-tool" id="dxTool">
+        <!-- Step 1: Deep Sulcus Side -->
+        <div class="dx-step active" id="step1">
+          <div class="dx-step-label">Step 1: Which sacral sulcus is DEEP?</div>
+          <div class="dx-btns">
+            <button class="dx-btn" onclick="dxSelect(1, 'L')">Left sulcus deep</button>
+            <button class="dx-btn" onclick="dxSelect(1, 'R')">Right sulcus deep</button>
+          </div>
+        </div>
+
+        <!-- Step 2: Posterior ILA Side -->
+        <div class="dx-step" id="step2">
+          <div class="dx-step-label">Step 2: Which ILA is more POSTERIOR (prominent)?</div>
+          <div class="dx-btns">
+            <button class="dx-btn" onclick="dxSelect(2, 'L')" disabled>Left ILA posterior</button>
+            <button class="dx-btn" onclick="dxSelect(2, 'R')" disabled>Right ILA posterior</button>
+          </div>
+        </div>
+
+        <!-- Step 3: Seated Flexion -->
+        <div class="dx-step" id="step3">
+          <div class="dx-step-label">Step 3: Seated flexion test — which side is POSITIVE?</div>
+          <div class="dx-btns">
+            <button class="dx-btn" onclick="dxSelect(3, 'L')" disabled>Left positive</button>
+            <button class="dx-btn" onclick="dxSelect(3, 'R')" disabled>Right positive</button>
+          </div>
+        </div>
+
+        <!-- Step 4: Spring Test -->
+        <div class="dx-step" id="step4">
+          <div class="dx-step-label">Step 4: Lumbosacral spring test — does the sacrum spring freely?</div>
+          <div class="dx-btns">
+            <button class="dx-btn" onclick="dxSelect(4, 'yes')" disabled>Yes (springs) — Forward torsion</button>
+            <button class="dx-btn" onclick="dxSelect(4, 'no')" disabled>No (rigid) — Backward torsion</button>
+          </div>
+        </div>
+
+        <!-- Result -->
+        <div class="dx-result" id="dxResult">
+          <h3 id="dxTitle"></h3>
+          <p id="dxDesc"></p>
+          <div id="dxGrid"></div>
+          <p id="dxL5"></p>
+          <p id="dxType"></p>
+        </div>
+
+        <button class="reset-btn" onclick="dxReset()">Reset Diagnosis</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHUNK 8: The COMLEX Cheat Sheet -->
+  <div class="chunk" style="--accent: #22c55e" onclick="this.classList.toggle('open')">
+    <div class="chunk-header">
+      <div class="chunk-num" style="background: #22c55e">&#9889;</div>
+      <div class="chunk-title">COMLEX Speed Run — Sacral Torsions</div>
+      <div class="chunk-toggle">&#9660;</div>
+    </div>
+    <div class="chunk-body">
+      <p>On COMLEX, sacral torsion questions give you <span class="highlight hl-green">landmarks and a flexion test</span>. Here's the fastest way to the answer:</p>
+
+      <div class="key-fact" style="background: #22c55e12; border: 1px solid #22c55e33; color: #86efac;">
+        <span class="icon">1.</span>
+        <span><strong>Find the deep sulcus.</strong> That tells you the rotation direction (base went anterior on that side = sacrum rotated toward that side).</span>
+      </div>
+      <div class="key-fact" style="background: #3b82f612; border: 1px solid #3b82f633; color: #93c5fd;">
+        <span class="icon">2.</span>
+        <span><strong>Check the seated flexion test.</strong> The positive side = the axis name.</span>
+      </div>
+      <div class="key-fact" style="background: #a855f712; border: 1px solid #a855f733; color: #c4b5fd;">
+        <span class="icon">3.</span>
+        <span><strong>Put it together:</strong> [Rotation side] on [Axis side]. Deep sulcus on R + positive seated flexion on R = <span class="highlight hl-purple">R on R</span>.</span>
+      </div>
+      <div class="key-fact" style="background: #eab30812; border: 1px solid #eab30833; color: #fde047;">
+        <span class="icon">4.</span>
+        <span><strong>Forward or backward?</strong> Same sides = forward. Different sides = backward.</span>
+      </div>
+
+      <p style="font-weight: 700; color: #f1f5f9; margin-top: 0.75rem;">The full reference table:</p>
+      <table class="mini-table">
+        <tr>
+          <th>Torsion</th>
+          <th>Deep Sulcus</th>
+          <th>Posterior ILA</th>
+          <th>+Seated Flex</th>
+          <th>Spring</th>
+          <th>L5</th>
+          <th>Type</th>
+        </tr>
+        <tr>
+          <td><span class="highlight hl-green">L on L</span></td>
+          <td>Left</td>
+          <td>Right</td>
+          <td>Left</td>
+          <td>Springs</td>
+          <td>R rot</td>
+          <td>Forward</td>
+        </tr>
+        <tr>
+          <td><span class="highlight hl-green">R on R</span></td>
+          <td>Right</td>
+          <td>Left</td>
+          <td>Right</td>
+          <td>Springs</td>
+          <td>L rot</td>
+          <td>Forward</td>
+        </tr>
+        <tr>
+          <td><span class="highlight hl-red">L on R</span></td>
+          <td>Right</td>
+          <td>Left</td>
+          <td>Right</td>
+          <td>Rigid</td>
+          <td>L rot</td>
+          <td>Backward</td>
+        </tr>
+        <tr>
+          <td><span class="highlight hl-red">R on L</span></td>
+          <td>Left</td>
+          <td>Right</td>
+          <td>Left</td>
+          <td>Rigid</td>
+          <td>R rot</td>
+          <td>Backward</td>
+        </tr>
+      </table>
+
+      <div class="key-fact" style="background: #ef444412; border: 1px solid #ef444433; color: #fca5a5;">
+        <span class="icon">&#9888;</span>
+        <span><strong>Board trap:</strong> L on R and R on R LOOK alike on landmarks (same deep sulcus, same posterior ILA). The <span class="highlight hl-red">spring test</span> differentiates them. Forward = springs. Backward = rigid. If you only get sulcus + ILA + seated flexion, you have TWO possible answers — you NEED the spring test (or L5 finding) to pick one.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHUNK 9: Practice Vignette -->
+  <div class="chunk" style="--accent: #ec4899" onclick="this.classList.toggle('open')">
+    <div class="chunk-header">
+      <div class="chunk-num" style="background: #ec4899">&#128203;</div>
+      <div class="chunk-title">Practice Vignette — Walk Through It</div>
+      <div class="chunk-toggle">&#9660;</div>
+    </div>
+    <div class="chunk-body">
+      <div class="key-fact" style="background: #1e293b; border: 1px solid #334155; color: #e2e8f0;">
+        <span class="icon">&#128203;</span>
+        <span>A 35-year-old patient presents with low back pain. On exam, you find a <span class="highlight hl-red">deep right sacral sulcus</span>, a <span class="highlight hl-orange">posterior left ILA</span>, and a <span class="highlight hl-pink">positive seated flexion test on the right</span>. The lumbosacral spring test shows the sacrum springs freely. L5 is rotated left. What is the sacral diagnosis?</span>
+      </div>
+
+      <p style="font-weight: 700; color: #f9a8d4; margin-top: 0.75rem;">Think through it:</p>
+      <p><span class="highlight hl-red">Deep right sulcus</span> = sacral base went anterior on the right = rotation is to the RIGHT.</p>
+      <p><span class="highlight hl-pink">Positive seated flexion on the right</span> = axis is on the RIGHT = RIGHT oblique axis.</p>
+      <p>Rotation RIGHT on RIGHT oblique = <span class="highlight hl-purple">R on R</span>.</p>
+      <p>Same sides = <span class="highlight hl-green">Forward torsion</span> (confirmed by spring test: springs freely).</p>
+      <p>L5 rotated left = <span class="highlight hl-cyan">opposite to sacral rotation</span> (consistent with forward/Type I).</p>
+
+      <div class="answer-grid" style="margin-top: 1rem;">
+        <div class="answer-card wrong">
+          <div class="answer-letter" style="color: #ef4444;">A. Left on Left sacral torsion</div>
+          <div class="answer-text">L on L would have a deep LEFT sulcus and positive seated flexion on the LEFT. The landmarks are on the wrong side for this answer.</div>
+        </div>
+        <div class="answer-card correct">
+          <div class="answer-letter" style="color: #22c55e;">B. Right on Right sacral torsion &#10003;</div>
+          <div class="answer-text"><span class="highlight hl-red">Deep R sulcus</span> + <span class="highlight hl-orange">posterior L ILA</span> + <span class="highlight hl-pink">positive R seated flex</span> + springs freely + L5 rotated L = R on R forward torsion. All findings are consistent.</div>
+        </div>
+        <div class="answer-card wrong">
+          <div class="answer-letter" style="color: #f59e0b;">C. Left on Right sacral torsion</div>
+          <div class="answer-text">L on R has the same deep R sulcus and positive R seated flex, but it's a BACKWARD torsion. The sacrum would be rigid (not spring freely), and L5 would rotate to the SAME side (left = same as sacral rotation left). Here, the sacral rotation is RIGHT, not left.</div>
+        </div>
+        <div class="answer-card wrong">
+          <div class="answer-letter" style="color: #a855f7;">D. Right on Left sacral torsion</div>
+          <div class="answer-text">R on L would have a deep LEFT sulcus and positive seated flexion on the LEFT. Wrong side for all landmarks.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHUNK 10: Board Traps -->
+  <div class="chunk" style="--accent: #f97316" onclick="this.classList.toggle('open')">
+    <div class="chunk-header">
+      <div class="chunk-num" style="background: #f97316">&#9888;</div>
+      <div class="chunk-title">Board Traps — Don't Fall For These</div>
+      <div class="chunk-toggle">&#9660;</div>
+    </div>
+    <div class="chunk-body">
+      <div class="key-fact" style="background: #ef444412; border: 1px solid #ef444433; color: #fca5a5;">
+        <span class="icon">&#9888;</span> <strong>Trap 1:</strong> Thinking "deep sulcus = posterior." WRONG. <span class="highlight hl-red">Deep = anterior</span>. The bone moved AWAY from your fingers (into the body). This is the most common mistake.
+      </div>
+      <div class="key-fact" style="background: #f59e0b12; border: 1px solid #f59e0b33; color: #fcd34d;">
+        <span class="icon">&#9888;</span> <strong>Trap 2:</strong> Confusing the seated flexion test with the standing flexion test. <span class="highlight hl-orange">Seated = sacral</span> dysfunction. Standing = could be iliac. For sacral torsions, you need the SEATED test.
+      </div>
+      <div class="key-fact" style="background: #a855f712; border: 1px solid #a855f733; color: #c4b5fd;">
+        <span class="icon">&#9888;</span> <strong>Trap 3:</strong> Mixing up "forward" and "backward." Remember: <span class="highlight hl-purple">same sides = forward, different sides = backward</span>. L on L and R on R = forward. L on R and R on L = backward.
+      </div>
+      <div class="key-fact" style="background: #3b82f612; border: 1px solid #3b82f633; color: #93c5fd;">
+        <span class="icon">&#9888;</span> <strong>Trap 4:</strong> Forgetting the spring test differentiates forward from backward when landmarks are ambiguous. <span class="highlight hl-blue">R on R and L on R share the same deep sulcus side and seated flex side</span>. Only the spring test (and L5) separates them.
+      </div>
+      <div class="key-fact" style="background: #22c55e12; border: 1px solid #22c55e33; color: #86efac;">
+        <span class="icon">&#9888;</span> <strong>Trap 5:</strong> Thinking Type I/II refers to the TORSION type. No — <span class="highlight hl-green">Type I/II are Fryette's laws</span> describing L5 coupling. Forward torsions follow Type I (opposite rotation). Backward torsions follow Type II (same rotation).
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<p class="footer">Bone Wizardry — Sacral Torsion Diagnosis</p>
+
+<script>
+// Tap-to-toggle tooltips on mobile
+document.querySelectorAll('.tip').forEach(tip => {
+  tip.addEventListener('click', e => {
+    e.stopPropagation();
+    const wasActive = tip.classList.contains('active');
+    document.querySelectorAll('.tip.active').forEach(t => t.classList.remove('active'));
+    if (!wasActive) tip.classList.add('active');
+  });
+});
+document.addEventListener('click', () => {
+  document.querySelectorAll('.tip.active').forEach(t => t.classList.remove('active'));
+});
+
+// Diagnosis tool
+const dxState = { deepSulcus: null, posteriorILA: null, seatedFlex: null, spring: null };
+
+function dxSelect(step, value) {
+  const steps = document.querySelectorAll('.dx-step');
+  const btns = steps[step - 1].querySelectorAll('.dx-btn');
+
+  // Mark selected
+  btns.forEach(b => b.classList.remove('selected'));
+  event.target.classList.add('selected');
+  steps[step - 1].classList.remove('active');
+  steps[step - 1].classList.add('completed');
+
+  if (step === 1) {
+    dxState.deepSulcus = value;
+    steps[1].classList.add('active');
+    steps[1].querySelectorAll('.dx-btn').forEach(b => b.disabled = false);
+  } else if (step === 2) {
+    dxState.posteriorILA = value;
+    steps[2].classList.add('active');
+    steps[2].querySelectorAll('.dx-btn').forEach(b => b.disabled = false);
+  } else if (step === 3) {
+    dxState.seatedFlex = value;
+    steps[3].classList.add('active');
+    steps[3].querySelectorAll('.dx-btn').forEach(b => b.disabled = false);
+  } else if (step === 4) {
+    dxState.spring = value;
+    showResult();
+  }
+}
+
+function showResult() {
+  const { deepSulcus, posteriorILA, seatedFlex, spring } = dxState;
+
+  // Determine torsion
+  const rotation = deepSulcus; // deep sulcus side = rotation direction
+  const axis = seatedFlex; // positive seated flex = axis
+  const axisName = axis === 'L' ? 'Left oblique' : 'Right oblique';
+  const rotName = rotation === 'L' ? 'Left' : 'Right';
+  const torsionName = rotName + ' on ' + (axis === 'L' ? 'Left' : 'Right');
+  const isForward = rotation === axis;
+  const typeLabel = isForward ? 'Forward (physiologic)' : 'Backward (non-physiologic)';
+  const springExpected = isForward ? 'Springs freely' : 'Rigid';
+  const l5Dir = isForward ? (rotation === 'L' ? 'Right' : 'Left') : (rotation === 'L' ? 'Left' : 'Right');
+  const l5Rule = isForward ? 'Opposite (Type I)' : 'Same (Type II)';
+
+  // Check consistency
+  const expectedPosteriorILA = rotation === 'L' ? 'R' : 'L';
+  const consistent = posteriorILA === expectedPosteriorILA;
+  const springConsistent = (spring === 'yes' && isForward) || (spring === 'no' && !isForward);
+
+  const result = document.getElementById('dxResult');
+  const titleEl = document.getElementById('dxTitle');
+  const descEl = document.getElementById('dxDesc');
+  const gridEl = document.getElementById('dxGrid');
+  const l5El = document.getElementById('dxL5');
+  const typeEl = document.getElementById('dxType');
+
+  titleEl.textContent = torsionName + ' Sacral Torsion';
+  descEl.innerHTML = '<strong>' + typeLabel + '</strong>';
+
+  // Build landmark grid
+  const lSulcus = deepSulcus === 'L' ? 'Deep (anterior)' : 'Shallow (posterior)';
+  const rSulcus = deepSulcus === 'R' ? 'Deep (anterior)' : 'Shallow (posterior)';
+  const lILA = posteriorILA === 'L' ? 'Posterior (prominent)' : 'Anterior (tucked)';
+  const rILA = posteriorILA === 'R' ? 'Posterior (prominent)' : 'Anterior (tucked)';
+
+  gridEl.innerHTML = '<div class="landmark-grid" style="--c: #22c55e">' +
+    '<div class="lg-header"></div><div class="lg-header">Left</div><div class="lg-header">Right</div>' +
+    '<div class="lg-label">Sulcus</div>' +
+    '<div class="lg-cell ' + (deepSulcus === 'L' ? 'deep' : 'shallow') + '">' + lSulcus + '</div>' +
+    '<div class="lg-cell ' + (deepSulcus === 'R' ? 'deep' : 'shallow') + '">' + rSulcus + '</div>' +
+    '<div class="lg-label">ILA</div>' +
+    '<div class="lg-cell ' + (posteriorILA === 'L' ? 'deep' : 'shallow') + '">' + lILA + '</div>' +
+    '<div class="lg-cell ' + (posteriorILA === 'R' ? 'deep' : 'shallow') + '">' + rILA + '</div>' +
+    '</div>';
+
+  l5El.innerHTML = '<strong>L5:</strong> Rotated ' + l5Dir + ' (' + l5Rule + ')';
+  typeEl.innerHTML = '<strong>Spring test:</strong> ' + springExpected;
+
+  // Warnings
+  let warnings = '';
+  if (!consistent) {
+    warnings += '<div style="color: #fca5a5; margin-top: 0.5rem; font-size: 0.8rem;">&#9888; Your ILA finding doesn\'t match the deep sulcus side. In a torsion, the posterior ILA should be on the OPPOSITE side of the deep sulcus. Double-check your exam findings.</div>';
+  }
+  if (!springConsistent) {
+    warnings += '<div style="color: #fcd34d; margin-top: 0.5rem; font-size: 0.8rem;">&#9888; Your spring test finding doesn\'t match the torsion type. Forward torsions spring freely; backward torsions are rigid. Re-examine or reconsider the diagnosis.</div>';
+  }
+  typeEl.innerHTML += warnings;
+
+  result.classList.add('show');
+}
+
+function dxReset() {
+  dxState.deepSulcus = null;
+  dxState.posteriorILA = null;
+  dxState.seatedFlex = null;
+  dxState.spring = null;
+
+  const steps = document.querySelectorAll('.dx-step');
+  steps.forEach((s, i) => {
+    s.classList.remove('active', 'completed');
+    s.querySelectorAll('.dx-btn').forEach(b => { b.classList.remove('selected'); b.disabled = i > 0; });
+  });
+  steps[0].classList.add('active');
+  document.getElementById('dxResult').classList.remove('show');
+}
+</script>
+
+</body>
+</html>
