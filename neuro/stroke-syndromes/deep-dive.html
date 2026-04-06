@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stroke Syndromes — Bone Wizardry</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'JetBrains Mono', monospace;
+    background: linear-gradient(180deg, #020617 0%, #0f172a 100%);
+    color: #e2e8f0; min-height: 100vh; padding: 2rem 1rem; line-height: 1.6;
+  }
+  a { text-decoration: none; }
+
+  .nav { display: flex; justify-content: center; gap: 0.75rem; margin-bottom: 2rem; flex-wrap: wrap; }
+  .nav-link {
+    padding: 0.5rem 1rem; border-radius: 0.75rem; font-size: 0.75rem; font-weight: 700;
+    border: 2px solid #334155; color: #94a3b8; transition: all 0.3s; cursor: pointer; font-family: inherit;
+  }
+  .nav-link:hover { border-color: #f97316; color: #f97316; background: #f9731610; }
+  .nav-link.active { border-color: #f97316; color: #f97316; background: #f9731610; }
+
+  .header { text-align: center; margin-bottom: 2.5rem; }
+  .header-sub { color: #64748b; font-size: 0.7rem; letter-spacing: 0.4em; text-transform: uppercase; margin-bottom: 0.5rem; }
+  .header h1 {
+    font-size: 1.8rem; font-weight: 900;
+    background: linear-gradient(135deg, #f97316, #ef4444, #a855f7);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .header-desc { color: #64748b; font-size: 0.75rem; margin-top: 0.5rem; max-width: 32rem; margin-left: auto; margin-right: auto; }
+
+  .section-label {
+    text-align: center; color: #475569; font-size: 0.65rem; letter-spacing: 0.3em;
+    text-transform: uppercase; margin: 3rem 0 1.5rem; position: relative;
+  }
+  .section-label::before, .section-label::after {
+    content: ''; position: absolute; top: 50%; width: 4rem; height: 1px; background: #1e293b;
+  }
+  .section-label::before { right: calc(50% + 5rem); }
+  .section-label::after { left: calc(50% + 5rem); }
+  .section-title { text-align: center; font-size: 1.3rem; font-weight: 900; margin-bottom: 0.5rem; }
+  .section-sub { text-align: center; color: #64748b; font-size: 0.75rem; margin-bottom: 2rem; }
+
+  /* ===== TERRITORY MAP ===== */
+  .territory-map {
+    max-width: 40rem; margin: 0 auto 2rem; background: #0f172a; border: 2px solid #1e293b;
+    border-radius: 1.25rem; padding: 1.5rem; position: relative;
+  }
+  .territory-map h3 { text-align: center; font-size: 0.85rem; color: #94a3b8; margin-bottom: 1rem; font-weight: 700; }
+  .territory-svg { width: 100%; max-width: 360px; margin: 0 auto; display: block; }
+  .territory-btn-group { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem; margin-top: 1.25rem; }
+  .territory-btn {
+    padding: 0.5rem 1rem; border-radius: 0.75rem; font-size: 0.7rem; font-weight: 700;
+    border: 2px solid #334155; color: #94a3b8; background: transparent; cursor: pointer;
+    font-family: inherit; transition: all 0.3s;
+  }
+  .territory-btn:hover { transform: scale(1.05); }
+  .territory-btn.active-mca { border-color: #f97316; color: #f97316; background: #f9731615; }
+  .territory-btn.active-aca { border-color: #3b82f6; color: #3b82f6; background: #3b82f615; }
+  .territory-btn.active-pca { border-color: #a855f7; color: #a855f7; background: #a855f715; }
+  .territory-btn.active-basilar { border-color: #ef4444; color: #ef4444; background: #ef444415; }
+  .territory-btn.active-lacunar { border-color: #22c55e; color: #22c55e; background: #22c55e15; }
+  .territory-info {
+    margin-top: 1.25rem; padding: 1rem; border-radius: 0.75rem; background: #1e293b;
+    font-size: 0.75rem; line-height: 1.7; min-height: 6rem; transition: all 0.3s;
+  }
+  .territory-info .info-title { font-weight: 900; font-size: 0.85rem; margin-bottom: 0.5rem; }
+  .territory-info .info-supply { color: #64748b; font-size: 0.65rem; margin-bottom: 0.5rem; }
+  .territory-info ul { padding-left: 1.2rem; }
+  .territory-info li { margin-bottom: 0.25rem; }
+  .territory-info .hallmark { color: #fde047; font-weight: 800; }
+  .territory-info .trap { color: #fca5a5; font-weight: 700; font-size: 0.7rem; margin-top: 0.5rem; }
+
+  /* ===== CHUNKS ===== */
+  .chunks { max-width: 40rem; margin: 0 auto; }
+  .chunk {
+    background: #0f172a; border: 2px solid #1e293b; border-radius: 1.25rem;
+    margin-bottom: 1rem; overflow: hidden; cursor: pointer; transition: border-color 0.3s;
+  }
+  .chunk:hover { border-color: var(--accent, #334155); }
+  .chunk-header {
+    display: flex; align-items: center; gap: 0.75rem; padding: 1rem 1.25rem;
+  }
+  .chunk-num {
+    width: 2rem; height: 2rem; border-radius: 0.6rem; display: flex; align-items: center; justify-content: center;
+    font-size: 0.75rem; font-weight: 900; color: #020617; flex-shrink: 0;
+  }
+  .chunk-title { flex: 1; font-weight: 800; font-size: 0.85rem; }
+  .chunk-toggle { font-size: 0.65rem; color: #475569; transition: transform 0.3s; }
+  .chunk.open .chunk-toggle { transform: rotate(180deg); }
+  .chunk-body {
+    max-height: 0; overflow: hidden; transition: max-height 0.5s ease; padding: 0 1.25rem;
+  }
+  .chunk.open .chunk-body { max-height: 4000px; padding: 0 1.25rem 1.25rem; }
+
+  .chunk-body p { color: #94a3b8; font-size: 0.8rem; margin-bottom: 0.75rem; line-height: 1.7; }
+  .chunk-body .hl-red { background: #ef444425; color: #fca5a5; border: 1px solid #ef444444; padding: 0.1rem 0.4rem; border-radius: 0.3rem; font-weight: 700; }
+  .chunk-body .hl-blue { background: #3b82f625; color: #93c5fd; border: 1px solid #3b82f644; padding: 0.1rem 0.4rem; border-radius: 0.3rem; font-weight: 700; }
+  .chunk-body .hl-yellow { background: #eab30825; color: #fde047; border: 1px solid #eab30844; padding: 0.1rem 0.4rem; border-radius: 0.3rem; font-weight: 700; }
+  .chunk-body .hl-green { background: #22c55e25; color: #86efac; border: 1px solid #22c55e44; padding: 0.1rem 0.4rem; border-radius: 0.3rem; font-weight: 700; }
+  .chunk-body .hl-orange { background: #f9731625; color: #fdba74; border: 1px solid #f9731644; padding: 0.1rem 0.4rem; border-radius: 0.3rem; font-weight: 700; }
+
+  /* Mini tables */
+  .mini-table { width: 100%; border-collapse: collapse; font-size: 0.7rem; margin: 0.75rem 0; }
+  .mini-table th { text-align: left; padding: 0.5rem 0.6rem; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 2px solid #1e293b; font-size: 0.6rem; }
+  .mini-table td { padding: 0.5rem 0.6rem; border-bottom: 1px solid #1e293b; color: #cbd5e1; }
+  .mini-table tr:hover td { background: #1e293b40; }
+
+  /* Tooltips */
+  .tip { position: relative; border-bottom: 1px dashed #475569; cursor: pointer; }
+  .tip-text {
+    display: none; position: absolute; bottom: calc(100% + 0.5rem); left: 50%; transform: translateX(-50%);
+    background: #1e293b; border: 1px solid #334155; border-radius: 0.5rem; padding: 0.6rem 0.8rem;
+    font-size: 0.65rem; color: #94a3b8; width: max-content; max-width: 16rem; z-index: 10;
+    line-height: 1.5; box-shadow: 0 4px 12px #00000060;
+  }
+  .tip.active .tip-text { display: block; }
+
+  /* Key fact boxes */
+  .key-fact {
+    padding: 0.75rem 1rem; border-radius: 0.75rem; margin: 0.75rem 0;
+    font-size: 0.75rem; font-weight: 700; display: flex; align-items: flex-start; gap: 0.5rem;
+  }
+  .key-fact.yellow { background: #eab30812; border: 1px solid #eab30833; color: #fde047; }
+  .key-fact.red { background: #ef444412; border: 1px solid #ef444433; color: #fca5a5; }
+  .key-fact.blue { background: #3b82f612; border: 1px solid #3b82f633; color: #93c5fd; }
+
+  /* Memory hook */
+  .hook {
+    padding: 0.75rem 1rem; border-radius: 0.75rem; margin: 0.75rem 0;
+    background: #1e293b; border: 1px dashed #475569; font-size: 0.75rem; text-align: center;
+    cursor: pointer; color: #64748b; transition: all 0.3s;
+  }
+  .hook.revealed { color: #e2e8f0; border-style: solid; }
+  .hook .hook-label { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.1em; color: #475569; margin-bottom: 0.25rem; }
+
+  /* ===== ELIMINATION GAME ===== */
+  .elim-game { max-width: 40rem; margin: 0 auto 2rem; }
+  .elim-vignette {
+    background: #0f172a; border: 2px solid #1e293b; border-radius: 1.25rem;
+    padding: 1.5rem; margin-bottom: 1rem;
+  }
+  .elim-vignette p { color: #94a3b8; font-size: 0.8rem; margin-bottom: 0.75rem; line-height: 1.7; }
+  .elim-clues { margin-bottom: 1rem; }
+  .elim-clue {
+    padding: 0.5rem 0.75rem; margin-bottom: 0.5rem; border-radius: 0.5rem;
+    background: #1e293b; font-size: 0.75rem; color: #94a3b8; cursor: pointer;
+    border: 1px solid #334155; transition: all 0.3s; display: none;
+  }
+  .elim-clue.visible { display: block; animation: fadeSlide 0.4s ease; }
+  .elim-clue .clue-num { color: #f97316; font-weight: 800; margin-right: 0.5rem; }
+  @keyframes fadeSlide { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+
+  .elim-cards { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; }
+  .elim-card {
+    flex: 1; min-width: 120px; padding: 0.6rem 0.75rem; border-radius: 0.75rem;
+    background: #1e293b; border: 2px solid #334155; font-size: 0.7rem; font-weight: 700;
+    text-align: center; cursor: pointer; transition: all 0.4s; color: #cbd5e1;
+  }
+  .elim-card:hover { border-color: #f97316; transform: scale(1.03); }
+  .elim-card.eliminated {
+    opacity: 0.3; border-color: #ef4444; text-decoration: line-through; pointer-events: none;
+    transform: scale(0.95);
+  }
+  .elim-card.winner {
+    border-color: #22c55e; background: #22c55e15; color: #86efac; animation: pulse 0.6s;
+  }
+  @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+
+  .elim-reveal-btn {
+    display: block; width: 100%; padding: 0.6rem; border-radius: 0.75rem;
+    background: #f9731620; border: 2px solid #f97316; color: #f97316; font-weight: 800;
+    font-size: 0.75rem; font-family: inherit; cursor: pointer; transition: all 0.3s;
+  }
+  .elim-reveal-btn:hover { background: #f9731630; }
+  .elim-reveal-btn:disabled { opacity: 0.3; cursor: default; }
+  .elim-explain {
+    margin-top: 0.75rem; padding: 0.75rem; border-radius: 0.5rem; background: #1e293b;
+    font-size: 0.75rem; color: #94a3b8; display: none; line-height: 1.7;
+  }
+  .elim-explain.visible { display: block; animation: fadeSlide 0.4s ease; }
+
+  /* ===== QUIZ ===== */
+  .quiz-section { max-width: 40rem; margin: 0 auto 2rem; }
+  .quiz-q {
+    background: #0f172a; border: 2px solid #1e293b; border-radius: 1.25rem;
+    padding: 1.5rem; margin-bottom: 1rem;
+  }
+  .quiz-q .q-num { color: #f97316; font-weight: 900; font-size: 0.7rem; margin-bottom: 0.5rem; }
+  .quiz-q .q-stem { color: #94a3b8; font-size: 0.8rem; margin-bottom: 1rem; line-height: 1.7; }
+  .quiz-options { display: flex; flex-direction: column; gap: 0.5rem; }
+  .quiz-opt {
+    padding: 0.6rem 0.8rem; border-radius: 0.5rem; border: 2px solid #334155;
+    background: #1e293b; color: #cbd5e1; font-size: 0.75rem; font-weight: 600;
+    cursor: pointer; transition: all 0.3s; font-family: inherit; text-align: left;
+  }
+  .quiz-opt:hover { border-color: #f97316; transform: translateX(4px); }
+  .quiz-opt.correct { border-color: #22c55e; background: #22c55e15; color: #86efac; }
+  .quiz-opt.wrong { border-color: #ef4444; background: #ef444415; color: #fca5a5; }
+  .quiz-opt.dimmed { opacity: 0.4; pointer-events: none; }
+  .quiz-explain {
+    margin-top: 0.75rem; padding: 0.75rem; border-radius: 0.5rem; background: #0f172a;
+    border: 1px solid #1e293b; font-size: 0.75rem; color: #94a3b8; display: none; line-height: 1.7;
+  }
+  .quiz-explain.visible { display: block; animation: fadeSlide 0.4s ease; }
+
+  /* Confetti */
+  .confetti-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 100; }
+
+  .footer { text-align: center; color: #334155; font-size: 0.6rem; margin-top: 4rem; padding-bottom: 2rem; }
+
+  /* Board trap box */
+  .trap-box {
+    padding: 0.75rem 1rem; border-radius: 0.75rem; margin: 0.75rem 0;
+    background: #ef444410; border: 1px solid #ef444433; font-size: 0.75rem; color: #fca5a5;
+  }
+  .trap-box .trap-title { font-weight: 900; font-size: 0.7rem; margin-bottom: 0.3rem; }
+
+  /* Sensory: blood vessel pulsing */
+  @keyframes vessel-pulse { 0%,100% { opacity: 0.7; } 50% { opacity: 1; } }
+  .vessel-text { animation: vessel-pulse 2s infinite; color: #ef4444; font-weight: 800; }
+
+  /* Sensory: weakness drooping */
+  @keyframes droop { 0% { transform: translateY(0); } 100% { transform: translateY(2px); } }
+  .droop-text { display: inline-block; animation: droop 1.5s ease-in-out infinite alternate; color: #94a3b8; }
+
+  /* Sensory: locked-in stillness */
+  .locked-text { color: #64748b; letter-spacing: 0.15em; font-weight: 300; }
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <a href="/index.html" class="nav-link">Home</a>
+  <a href="/neuro/index.html" class="nav-link">Neuro</a>
+  <a href="#" class="nav-link active">Stroke Syndromes</a>
+</div>
+
+<div class="header">
+  <p class="header-sub">Bone Wizardry — Neuro</p>
+  <h1>Stroke Syndromes</h1>
+  <p class="header-desc">Which artery, which deficit, which side. The board question is always: "this patient's symptoms localize to ____."</p>
+</div>
+
+<!-- ===== CHALLENGE OPENER ===== -->
+<div class="chunks">
+  <div class="chunk" style="--accent: #f97316" onclick="this.classList.toggle('open')">
+    <div class="chunk-header">
+      <div class="chunk-num" style="background: #f97316">?</div>
+      <div class="chunk-title">Quick — where's the lesion?</div>
+      <div class="chunk-toggle">&#9660;</div>
+    </div>
+    <div class="chunk-body">
+      <p>A 68-year-old woman presents with right arm and face weakness. Her leg is spared. She can't speak but can understand you. Where is the stroke?</p>
+      <p>If you said <span class="hl-orange">left MCA</span> — good instinct. Face + arm without leg = MCA territory. Expressive aphasia (Broca's) confirms left hemisphere. The leg being spared is the key — that's ACA territory.</p>
+      <p>If you weren't sure, that's exactly why this page exists. Let's build the map.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== INTERACTIVE TERRITORY MAP ===== -->
+<p class="section-label">Interactive Reference</p>
+<p class="section-title">The Territory Map</p>
+<p class="section-sub">Tap an artery. See what it feeds. Know what breaks.</p>
+
+<div class="territory-map">
+  <h3>Cerebral Artery Territories</h3>
+  <svg class="territory-svg" viewBox="0 0 360 320" xmlns="http://www.w3.org/2000/svg">
+    <!-- Brain outline -->
+    <ellipse cx="180" cy="150" rx="155" ry="130" fill="none" stroke="#334155" stroke-width="2"/>
+    <!-- Midline -->
+    <line x1="180" y1="20" x2="180" y2="280" stroke="#1e293b" stroke-width="1" stroke-dasharray="4,4"/>
+
+    <!-- MCA territory (lateral) -->
+    <path id="mca-zone" d="M80,100 Q120,60 180,80 Q240,60 280,100 L260,180 Q220,200 180,190 Q140,200 100,180 Z"
+      fill="#f9731610" stroke="#f9731640" stroke-width="1.5" class="zone" data-zone="mca" style="cursor:pointer"/>
+    <text x="180" y="140" text-anchor="middle" fill="#f9731680" font-size="11" font-weight="700" font-family="JetBrains Mono" pointer-events="none">MCA</text>
+
+    <!-- ACA territory (medial/superior) -->
+    <path id="aca-zone" d="M130,30 Q155,15 180,20 Q205,15 230,30 L220,80 Q200,65 180,70 Q160,65 140,80 Z"
+      fill="#3b82f610" stroke="#3b82f640" stroke-width="1.5" class="zone" data-zone="aca" style="cursor:pointer"/>
+    <text x="180" y="55" text-anchor="middle" fill="#3b82f680" font-size="11" font-weight="700" font-family="JetBrains Mono" pointer-events="none">ACA</text>
+
+    <!-- PCA territory (posterior/occipital) -->
+    <path id="pca-zone" d="M90,190 Q130,210 180,200 Q230,210 270,190 L260,250 Q220,275 180,270 Q140,275 100,250 Z"
+      fill="#a855f710" stroke="#a855f740" stroke-width="1.5" class="zone" data-zone="pca" style="cursor:pointer"/>
+    <text x="180" y="240" text-anchor="middle" fill="#a855f780" font-size="11" font-weight="700" font-family="JetBrains Mono" pointer-events="none">PCA</text>
+
+    <!-- Basilar (brainstem region) -->
+    <ellipse id="basilar-zone" cx="180" cy="290" rx="35" ry="20" fill="#ef444410" stroke="#ef444440" stroke-width="1.5" class="zone" data-zone="basilar" style="cursor:pointer"/>
+    <text x="180" y="294" text-anchor="middle" fill="#ef444480" font-size="9" font-weight="700" font-family="JetBrains Mono" pointer-events="none">Basilar</text>
+
+    <!-- Lacunar (deep structures) -->
+    <circle id="lacunar-zone" cx="155" cy="155" r="18" fill="#22c55e10" stroke="#22c55e40" stroke-width="1.5" class="zone" data-zone="lacunar" style="cursor:pointer"/>
+    <circle cx="205" cy="155" r="18" fill="#22c55e10" stroke="#22c55e40" stroke-width="1.5" class="zone" data-zone="lacunar" style="cursor:pointer"/>
+    <text x="180" y="160" text-anchor="middle" fill="#22c55e80" font-size="8" font-weight="700" font-family="JetBrains Mono" pointer-events="none">Lacunar</text>
+  </svg>
+
+  <div class="territory-btn-group">
+    <button class="territory-btn" onclick="showTerritory('mca', this)">MCA</button>
+    <button class="territory-btn" onclick="showTerritory('aca', this)">ACA</button>
+    <button class="territory-btn" onclick="showTerritory('pca', this)">PCA</button>
+    <button class="territory-btn" onclick="showTerritory('basilar', this)">Basilar</button>
+    <button class="territory-btn" onclick="showTerritory('lacunar', this)">Lacunar</button>
+  </div>
+
+  <div class="territory-info" id="territory-info">
+    <div style="color: #475569; text-align: center; padding: 1rem 0;">Tap an artery above to see its territory and deficits</div>
+  </div>
+</div>
+
+<!-- ===== DEEP-DIVE CHUNKS ===== -->
+<p class="section-label">The Big Five</p>
+<p class="section-title">Know These Cold</p>
+<p class="section-sub">Each artery has a signature. Learn the signature, not the list.</p>
+
+<div class="chunks">
+  <!-- MCA -->
+  <div class="chunk" style="--accent: #f97316" onclick="this.classList.toggle('open')">
+    <div class="chunk-header">
+      <div class="chunk-num" style="background: #f97316">1</div>
+      <div class="chunk-title">MCA — The Big One</div>
+      <div class="chunk-toggle">&#9660;</div>
+    </div>
+    <div class="chunk-body">
+      <p>The MCA supplies the <b>lateral cortex</b> — motor and sensory strips for face and arm, Broca's area, Wernicke's area, and the <span class="tip">lenticulostriate arteries<span class="tip-text">Small branches off the MCA that feed the basal ganglia and internal capsule. When these rupture in hypertension, you get a deep hemorrhagic stroke — not the same as MCA territory cortical stroke.</span></span>.</p>
+      <div class="key-fact yellow">
+        <span>&#128273;</span>
+        <span><b>MCA signature:</b> Contralateral face + arm weakness <b>with leg spared</b>. If the leg is weak too, think ACA involvement or internal capsule (lacunar).</span>
+      </div>
+      <p><b>Left MCA</b> = face/arm weakness + <span class="hl-orange">aphasia</span> (Broca's if frontal, Wernicke's if temporal, global if both).</p>
+      <p><b>Right MCA</b> = face/arm weakness + <span class="hl-blue">hemispatial neglect</span> (patient ignores the left side of the world).</p>
+      <table class="mini-table">
+        <tr><th>Finding</th><th>Localizes To</th></tr>
+        <tr><td>Broca's aphasia (can understand, can't speak)</td><td>Left frontal (inferior frontal gyrus)</td></tr>
+        <tr><td>Wernicke's aphasia (fluent but nonsense)</td><td>Left temporal (superior temporal gyrus)</td></tr>
+        <tr><td>Hemispatial neglect</td><td>Right parietal</td></tr>
+        <tr><td>Contralateral homonymous hemianopia</td><td>Optic radiation involvement</td></tr>
+      </table>
+      <div class="trap-box">
+        <div class="trap-title">&#9888; BOARD TRAP</div>
+        A patient with <b>global aphasia + right hemiplegia</b> = left MCA occlusion. But if they ONLY have leg weakness, that's ACA — don't pick MCA just because it's the most common stroke.
+      </div>
+      <div class="hook" onclick="this.classList.toggle('revealed')">
+        <div class="hook-label">&#128273; Memory Hook — tap to reveal</div>
+        <div><b>MCA = "Makes the Contralateral Arm" weak.</b> Face and arm live on the lateral strip. Leg hangs over the medial edge — that's ACA territory.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ACA -->
+  <div class="chunk" style="--accent: #3b82f6" onclick="this.classList.toggle('open')">
+    <div class="chunk-header">
+      <div class="chunk-num" style="background: #3b82f6">2</div>
+      <div class="chunk-title">ACA — The Leg Artery</div>
+      <div class="chunk-toggle">&#9660;</div>
+    </div>
+    <div class="chunk-body">
+      <p>The ACA supplies the <b>medial surface</b> of the frontal and parietal lobes. The motor and sensory homunculus for the <b>leg</b> hangs over the medial edge of the hemisphere — right in ACA territory.</p>
+      <div class="key-fact yellow">
+        <span>&#128273;</span>
+        <span><b>ACA signature:</b> Contralateral <b>leg</b> weakness and sensory loss, <b>with arm and face spared</b>. This is the opposite of MCA.</span>
+      </div>
+      <p>ACA strokes can also cause personality changes (medial frontal = behavioral regulation), urinary incontinence, and <span class="tip">alien hand syndrome<span class="tip-text">The affected hand acts on its own — reaches for objects, interferes with the other hand. Caused by damage to the supplementary motor area or corpus callosum. Rare but highly tested because it's memorable.</span></span>.</p>
+      <table class="mini-table">
+        <tr><th>Finding</th><th>Why</th></tr>
+        <tr><td>Contralateral leg weakness</td><td>Leg motor strip is on the medial surface</td></tr>
+        <tr><td>Personality change / apathy</td><td>Medial frontal cortex (behavioral regulation)</td></tr>
+        <tr><td>Urinary incontinence</td><td>Micturition center in medial frontal lobe</td></tr>
+        <tr><td>Alien hand syndrome</td><td>Supplementary motor area / corpus callosum</td></tr>
+      </table>
+      <div class="hook" onclick="this.classList.toggle('revealed')">
+        <div class="hook-label">&#128273; Memory Hook — tap to reveal</div>
+        <div><b>ACA = "A leg, C? Absolutely."</b> Leg weakness with personality change = ACA until proven otherwise. If someone's peeing on themselves and acting weird and their leg doesn't work, it's not dementia — it's ACA stroke.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PCA -->
+  <div class="chunk" style="--accent: #a855f7" onclick="this.classList.toggle('open')">
+    <div class="chunk-header">
+      <div class="chunk-num" style="background: #a855f7">3</div>
+      <div class="chunk-title">PCA — The Vision Artery</div>
+      <div class="chunk-toggle">&#9660;</div>
+    </div>
+    <div class="chunk-body">
+      <p>The PCA supplies the <b>occipital lobe</b> (primary visual cortex) and the <b>inferior temporal lobe</b>. It also feeds the <span class="tip">thalamus<span class="tip-text">Via thalamoperforating and thalamogeniculate branches. Thalamic stroke from PCA occlusion causes contralateral sensory loss, sometimes with pain (Dejerine-Roussy syndrome — thalamic pain syndrome).</span></span> via perforating branches.</p>
+      <div class="key-fact yellow">
+        <span>&#128273;</span>
+        <span><b>PCA signature:</b> Contralateral <b>homonymous hemianopia with macular sparing</b>. The patient is blind in one visual field but can still see straight ahead because the macula gets dual blood supply (MCA + PCA).</span>
+      </div>
+      <p><b>Left PCA</b> can cause <span class="hl-orange">alexia without agraphia</span> — the patient can write but can't read what they wrote. Wild, but real. Damage to the left visual cortex + splenium of the corpus callosum disconnects visual input from the language centers.</p>
+      <table class="mini-table">
+        <tr><th>Finding</th><th>Why</th></tr>
+        <tr><td>Homonymous hemianopia (macular sparing)</td><td>Occipital cortex — macula has dual supply</td></tr>
+        <tr><td>Alexia without agraphia</td><td>Left PCA + splenium disconnection</td></tr>
+        <tr><td>Prosopagnosia (can't recognize faces)</td><td>Bilateral fusiform gyrus (inferior temporal)</td></tr>
+        <tr><td>Thalamic pain syndrome</td><td>Thalamoperforating branches</td></tr>
+      </table>
+      <div class="trap-box">
+        <div class="trap-title">&#9888; BOARD TRAP</div>
+        Homonymous hemianopia <b>without</b> macular sparing = MCA stroke (optic radiation, not visual cortex). <b>With</b> macular sparing = PCA. The macular sparing is the differentiator.
+      </div>
+      <div class="hook" onclick="this.classList.toggle('revealed')">
+        <div class="hook-label">&#128273; Memory Hook — tap to reveal</div>
+        <div><b>PCA = "Practically Can't see Anything."</b> If the main complaint is vision loss (hemianopia), think posterior. If it's weakness, think anterior.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Basilar -->
+  <div class="chunk" style="--accent: #ef4444" onclick="this.classList.toggle('open')">
+    <div class="chunk-header">
+      <div class="chunk-num" style="background: #ef4444">4</div>
+      <div class="chunk-title">Basilar — The Deadly One</div>
+      <div class="chunk-toggle">&#9660;</div>
+    </div>
+    <div class="chunk-body">
+      <p>The basilar artery feeds the <b>pons, cerebellum, and midbrain</b>. Basilar occlusion is a neurological emergency — if you lose the pons, you lose consciousness, breathing, and everything below.</p>
+      <div class="key-fact red">
+        <span>&#9888;</span>
+        <span><b>Locked-in syndrome:</b> Basilar artery thrombosis destroys the ventral pons. Patient is <b>fully conscious</b> but can only move their eyes (vertical gaze preserved because CN III nucleus is in the midbrain, above the lesion). <span class="locked-text">Awake. Aware. Trapped.</span></span>
+      </div>
+      <p><b>Lateral pontine syndrome</b> (AICA occlusion): ipsilateral facial paralysis, hearing loss, ataxia + contralateral pain/temperature loss in the body. The <span class="tip">"crossed findings"<span class="tip-text">Brainstem strokes produce CROSSED deficits: ipsilateral cranial nerve signs (CN nuclei are IN the brainstem) + contralateral motor/sensory (tracts CROSS at the brainstem level). This is the board's favorite brainstem trick.</span></span> are the giveaway for any brainstem stroke.</p>
+      <table class="mini-table">
+        <tr><th>Syndrome</th><th>Artery</th><th>Key Finding</th></tr>
+        <tr><td>Locked-in syndrome</td><td>Basilar trunk</td><td>Quadriplegia, anarthria, preserved vertical eye movement + consciousness</td></tr>
+        <tr><td>Lateral pontine (AICA)</td><td>AICA</td><td>Ipsilateral facial paralysis + deafness + ataxia</td></tr>
+        <tr><td>Medial pontine</td><td>Paramedian branches</td><td>Contralateral hemiparesis + ipsilateral CN VI palsy</td></tr>
+        <tr><td>Lateral medullary (Wallenberg)</td><td>PICA</td><td>Dysphagia, hoarseness, ipsilateral Horner's, contralateral pain/temp loss</td></tr>
+      </table>
+      <div class="trap-box">
+        <div class="trap-title">&#9888; BOARD TRAP</div>
+        <b>Locked-in ≠ coma.</b> The patient is AWAKE. EEG shows normal wakefulness. They can hear everything you say. The board loves to ask: "What test confirms consciousness?" Answer: ask them to blink or look up.
+      </div>
+      <div class="hook" onclick="this.classList.toggle('revealed')">
+        <div class="hook-label">&#128273; Memory Hook — tap to reveal</div>
+        <div><b>Wallenberg = "lateral medullary = PICA."</b> Dysphagia + hoarseness + Horner's + "I can't feel pain on one side of my body but the OTHER side of my face" = crossed findings = brainstem = Wallenberg. The board LOVES this one.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lacunar -->
+  <div class="chunk" style="--accent: #22c55e" onclick="this.classList.toggle('open')">
+    <div class="chunk-header">
+      <div class="chunk-num" style="background: #22c55e">5</div>
+      <div class="chunk-title">Lacunar — The Small Vessel Strokes</div>
+      <div class="chunk-toggle">&#9660;</div>
+    </div>
+    <div class="chunk-body">
+      <p>Lacunar strokes are <b>small infarcts</b> in the deep brain structures — basal ganglia, thalamus, internal capsule, pons. Caused by <span class="tip">lipohyalinosis<span class="tip-text">Thickening and hyaline deposition in the walls of small penetrating arteries. Caused by chronic hypertension. These tiny vessels can't handle the pressure and either occlude or rupture. Hypertension is the #1 risk factor for lacunar strokes.</span></span> of small penetrating arteries. <b>Hypertension</b> is the #1 cause.</p>
+      <div class="key-fact yellow">
+        <span>&#128273;</span>
+        <span><b>Lacunar signature:</b> <b>Pure</b> syndromes — pure motor, pure sensory, or both. NO cortical signs (no aphasia, no neglect, no visual field cuts). If there's cortical involvement, it's not lacunar.</span>
+      </div>
+      <table class="mini-table">
+        <tr><th>Syndrome</th><th>Location</th><th>Presentation</th></tr>
+        <tr><td>Pure motor hemiparesis</td><td>Posterior limb of internal capsule</td><td>Face + arm + leg weakness, NO sensory loss</td></tr>
+        <tr><td>Pure sensory stroke</td><td>VPL nucleus of thalamus</td><td>Face + arm + leg numbness, NO weakness</td></tr>
+        <tr><td>Ataxic hemiparesis</td><td>Posterior limb / pons</td><td>Weakness + cerebellar ataxia on same side</td></tr>
+        <tr><td>Dysarthria-clumsy hand</td><td>Basis pontis / genu of internal capsule</td><td>Slurred speech + hand clumsiness</td></tr>
+      </table>
+      <p>The internal capsule is the board's favorite lacunar target. Everything passes through it — motor tracts, sensory tracts, everything. A tiny lacunar infarct here causes <b>complete contralateral hemiparesis</b> (face + arm + leg, because ALL the motor fibers are bundled together at this point).</p>
+      <div class="trap-box">
+        <div class="trap-title">&#9888; BOARD TRAP</div>
+        Lacunar stroke with <b>face + arm + leg</b> weakness looks like MCA at first. The difference: <b>no cortical signs</b>. No aphasia. No neglect. No hemianopia. If the weakness is "too pure" — just motor, nothing else — think lacunar.
+      </div>
+      <div class="hook" onclick="this.classList.toggle('revealed')">
+        <div class="hook-label">&#128273; Memory Hook — tap to reveal</div>
+        <div><b>"Pure = Poor little vessels."</b> Lacunar strokes are PURE — pure motor, pure sensory. The moment you see cortical signs (aphasia, neglect, visual field cuts), you've left lacunar territory and entered MCA/ACA/PCA land.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ELIMINATION GAME ===== -->
+<p class="section-label">Elimination Challenge</p>
+<p class="section-title">Name That Artery</p>
+<p class="section-sub">Clinical clues appear one at a time. Eliminate arteries as you go.</p>
+
+<div class="elim-game" id="elim-game-container">
+  <!-- Games are dynamically generated -->
+</div>
+
+<!-- ===== QUIZ ===== -->
+<p class="section-label">Board-Style Questions</p>
+<p class="section-title">Clinical Vignettes</p>
+<p class="section-sub">4 random questions from a pool. Shuffled every load.</p>
+
+<div class="quiz-section" id="quiz-container">
+  <!-- Quiz questions are dynamically generated -->
+</div>
+
+<canvas class="confetti-canvas" id="confetti"></canvas>
+
+<p class="footer">Bone Wizardry — COMLEX Review</p>
+
+<script>
+// ===== TERRITORY MAP =====
+const territories = {
+  mca: {
+    color: '#f97316', btnClass: 'active-mca',
+    html: `<div class="info-title" style="color:#f97316">Middle Cerebral Artery (MCA)</div>
+    <div class="info-supply">Supplies: lateral cortex — face/arm motor+sensory, Broca's, Wernicke's, optic radiation</div>
+    <ul>
+      <li class="hallmark">&#128273; Contralateral face + arm weakness, <b>leg spared</b></li>
+      <li><b>Left MCA:</b> aphasia (Broca's or Wernicke's)</li>
+      <li><b>Right MCA:</b> hemispatial neglect (ignores left world)</li>
+      <li>Contralateral homonymous hemianopia (no macular sparing)</li>
+    </ul>
+    <div class="trap">&#9888; Most common stroke territory. If leg is involved = not pure MCA.</div>`
+  },
+  aca: {
+    color: '#3b82f6', btnClass: 'active-aca',
+    html: `<div class="info-title" style="color:#3b82f6">Anterior Cerebral Artery (ACA)</div>
+    <div class="info-supply">Supplies: medial frontal + parietal cortex — leg motor+sensory, behavioral regulation</div>
+    <ul>
+      <li class="hallmark">&#128273; Contralateral <b>leg</b> weakness, arm + face spared</li>
+      <li>Personality change, apathy, flat affect</li>
+      <li>Urinary incontinence</li>
+      <li>Alien hand syndrome (rare but tested)</li>
+    </ul>
+    <div class="trap">&#9888; The mirror of MCA. Leg = ACA. Arm/face = MCA. Don't mix them.</div>`
+  },
+  pca: {
+    color: '#a855f7', btnClass: 'active-pca',
+    html: `<div class="info-title" style="color:#a855f7">Posterior Cerebral Artery (PCA)</div>
+    <div class="info-supply">Supplies: occipital lobe (visual cortex), inferior temporal, thalamus</div>
+    <ul>
+      <li class="hallmark">&#128273; Contralateral homonymous hemianopia <b>with macular sparing</b></li>
+      <li>Alexia without agraphia (left PCA)</li>
+      <li>Prosopagnosia (bilateral fusiform — rare)</li>
+      <li>Thalamic pain syndrome (perforating branches)</li>
+    </ul>
+    <div class="trap">&#9888; Macular sparing = PCA. No macular sparing = MCA optic radiation.</div>`
+  },
+  basilar: {
+    color: '#ef4444', btnClass: 'active-basilar',
+    html: `<div class="info-title" style="color:#ef4444">Basilar Artery</div>
+    <div class="info-supply">Supplies: pons, cerebellum, midbrain (via AICA, SCA, paramedian branches)</div>
+    <ul>
+      <li class="hallmark">&#128273; Locked-in syndrome: quadriplegia + anarthria + <b>preserved consciousness</b></li>
+      <li><b>Crossed findings:</b> ipsilateral CN signs + contralateral body motor/sensory</li>
+      <li>PICA = Wallenberg (lateral medullary): dysphagia, Horner's, crossed pain/temp</li>
+      <li>AICA = lateral pontine: facial paralysis, deafness, ataxia</li>
+    </ul>
+    <div class="trap">&#9888; Crossed findings = brainstem. Always. If ipsilateral face + contralateral body = brainstem stroke.</div>`
+  },
+  lacunar: {
+    color: '#22c55e', btnClass: 'active-lacunar',
+    html: `<div class="info-title" style="color:#22c55e">Lacunar Strokes (Small Vessel)</div>
+    <div class="info-supply">Supplies: basal ganglia, internal capsule, thalamus, pons (small penetrating arteries)</div>
+    <ul>
+      <li class="hallmark">&#128273; PURE syndromes — no cortical signs (no aphasia, no neglect, no hemianopia)</li>
+      <li>Pure motor hemiparesis (posterior limb of internal capsule)</li>
+      <li>Pure sensory stroke (VPL thalamus)</li>
+      <li>Ataxic hemiparesis, dysarthria-clumsy hand</li>
+    </ul>
+    <div class="trap">&#9888; #1 cause: hypertension. If you see pure motor or pure sensory with NO cortical signs, it's lacunar.</div>`
+  }
+};
+
+let activeTerritory = null;
+function showTerritory(zone, btn) {
+  // Reset buttons
+  document.querySelectorAll('.territory-btn').forEach(b => b.className = 'territory-btn');
+  // Reset SVG zones
+  document.querySelectorAll('.zone').forEach(z => {
+    z.style.fill = z.dataset.zone === zone ? territories[zone].color + '30' : (z.dataset.zone + '10');
+    z.style.stroke = z.dataset.zone === zone ? territories[zone].color : '#334155';
+    z.style.strokeWidth = z.dataset.zone === zone ? '3' : '1.5';
+  });
+  // Highlight zones matching
+  document.querySelectorAll(`.zone[data-zone="${zone}"]`).forEach(z => {
+    z.style.fill = territories[zone].color + '30';
+    z.style.stroke = territories[zone].color;
+    z.style.strokeWidth = '3';
+  });
+
+  btn.classList.add(territories[zone].btnClass);
+  document.getElementById('territory-info').innerHTML = territories[zone].html;
+  activeTerritory = zone;
+}
+
+// SVG zone clicks
+document.querySelectorAll('.zone').forEach(z => {
+  z.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const zone = z.dataset.zone;
+    const btn = document.querySelector(`.territory-btn:nth-child(${['mca','aca','pca','basilar','lacunar'].indexOf(zone)+1})`);
+    showTerritory(zone, btn);
+  });
+});
+
+// ===== ELIMINATION GAME =====
+const elimGames = [
+  {
+    stem: "A 72-year-old man with a history of atrial fibrillation is brought to the ED. He was found slumped in his chair.",
+    clues: [
+      { text: "Right arm is flaccid. Right leg has normal strength.", rule: "Arm without leg = lateral cortex, not medial or deep.", eliminates: ['aca','lacunar'] },
+      { text: "He can't produce speech but nods appropriately to questions.", rule: "Expressive aphasia = Broca's area = left frontal.", eliminates: ['pca'] },
+      { text: "No cranial nerve deficits suggesting brainstem involvement.", rule: "No crossed findings = not posterior fossa.", eliminates: ['basilar'] }
+    ],
+    answer: 'mca', answerName: 'Left MCA',
+    explain: "Face + arm weakness with leg spared = lateral cortex = MCA territory. Broca's aphasia confirms left hemisphere. No brainstem signs, no visual symptoms, no leg involvement. Classic left MCA stroke from a cardioembolism (atrial fib)."
+  },
+  {
+    stem: "A 65-year-old woman with uncontrolled hypertension presents with sudden right-sided weakness.",
+    clues: [
+      { text: "Right face, arm, AND leg are equally weak. No sensory loss.", rule: "All three weak equally + pure motor = deep structure, not cortical.", eliminates: ['aca','pca'] },
+      { text: "She speaks clearly. No aphasia. No visual changes.", rule: "No cortical signs = not a cortical artery territory stroke.", eliminates: ['mca'] },
+      { text: "No cranial nerve palsies. No ataxia. No crossed findings.", rule: "No brainstem signs.", eliminates: ['basilar'] }
+    ],
+    answer: 'lacunar', answerName: 'Lacunar (internal capsule)',
+    explain: "Pure motor hemiparesis affecting face + arm + leg equally, with NO cortical signs (no aphasia, no neglect, no hemianopia) = lacunar stroke in the posterior limb of the internal capsule. Hypertension is the #1 risk factor. All motor fibers are bundled together at the internal capsule — one tiny infarct takes everything out."
+  },
+  {
+    stem: "A 58-year-old man suddenly can't see anything to his left. He walks into door frames on the left side.",
+    clues: [
+      { text: "Full strength in all extremities. No weakness anywhere.", rule: "No motor deficit = not a motor territory stroke.", eliminates: ['mca','aca','lacunar'] },
+      { text: "Left homonymous hemianopia. He can still read small print directly in front of him.", rule: "Vision loss with central vision preserved = macular sparing = occipital cortex.", eliminates: ['basilar'] }
+    ],
+    answer: 'pca', answerName: 'Right PCA',
+    explain: "Contralateral homonymous hemianopia with macular sparing = PCA territory (occipital cortex). The macula gets dual blood supply from both MCA and PCA, so it's often spared in PCA strokes. No motor weakness rules out anterior circulation. Right PCA causes left visual field loss."
+  },
+  {
+    stem: "A 70-year-old man presents with sudden difficulty swallowing and hoarseness. He's dizzy and veering to the right when walking.",
+    clues: [
+      { text: "Right-sided Horner syndrome (ptosis, miosis, anhidrosis).", rule: "Ipsilateral Horner's = descending sympathetic tract in the lateral medulla.", eliminates: ['mca','aca','lacunar'] },
+      { text: "Decreased pain and temperature sensation on the LEFT body, but NORMAL on the left face. Right face has decreased pain/temp.", rule: "CROSSED findings: ipsilateral face + contralateral body = brainstem.", eliminates: ['pca'] }
+    ],
+    answer: 'basilar', answerName: 'PICA (Wallenberg syndrome)',
+    explain: "This is the classic Wallenberg (lateral medullary) syndrome from PICA occlusion. Ipsilateral: Horner's + facial pain/temp loss + ataxia + dysphagia/hoarseness (CN IX/X). Contralateral: body pain/temp loss. The CROSSED pattern is pathognomonic for brainstem strokes. Wallenberg is the most tested brainstem stroke on boards."
+  }
+];
+
+function buildElimGames() {
+  const container = document.getElementById('elim-game-container');
+  // Pick 2 random games
+  const shuffled = elimGames.sort(() => Math.random() - 0.5).slice(0, 2);
+  shuffled.forEach((game, gi) => {
+    const gameEl = document.createElement('div');
+    gameEl.className = 'elim-vignette';
+    const arteries = ['mca','aca','pca','basilar','lacunar'];
+    const arteryNames = {mca:'MCA',aca:'ACA',pca:'PCA',basilar:'Basilar/PICA',lacunar:'Lacunar'};
+    let html = `<p>${game.stem}</p><div class="elim-clues" id="elim-clues-${gi}">`;
+    game.clues.forEach((c, ci) => {
+      html += `<div class="elim-clue" id="elim-clue-${gi}-${ci}"><span class="clue-num">Clue ${ci+1}:</span> ${c.text}<br><span style="color:#64748b;font-size:0.65rem">${c.rule}</span></div>`;
+    });
+    html += `</div><div class="elim-cards" id="elim-cards-${gi}">`;
+    arteries.forEach(a => {
+      html += `<div class="elim-card" id="elim-card-${gi}-${a}" onclick="pickElim(${gi},'${a}')">${arteryNames[a]}</div>`;
+    });
+    html += `</div>`;
+    html += `<button class="elim-reveal-btn" id="elim-btn-${gi}" onclick="revealClue(${gi})">Reveal Clue 1</button>`;
+    html += `<div class="elim-explain" id="elim-explain-${gi}">${game.explain}</div>`;
+    gameEl.innerHTML = html;
+    container.appendChild(gameEl);
+    gameEl._game = game;
+    gameEl._clueIdx = 0;
+    gameEl._solved = false;
+  });
+}
+
+function revealClue(gi) {
+  const container = document.getElementById('elim-game-container');
+  const gameEl = container.children[gi];
+  const game = gameEl._game;
+  const idx = gameEl._clueIdx;
+  if (idx >= game.clues.length || gameEl._solved) return;
+
+  const clueEl = document.getElementById(`elim-clue-${gi}-${idx}`);
+  clueEl.classList.add('visible');
+
+  // Eliminate cards
+  game.clues[idx].eliminates.forEach(a => {
+    const card = document.getElementById(`elim-card-${gi}-${a}`);
+    if (card) card.classList.add('eliminated');
+  });
+
+  gameEl._clueIdx++;
+  const btn = document.getElementById(`elim-btn-${gi}`);
+  if (gameEl._clueIdx < game.clues.length) {
+    btn.textContent = `Reveal Clue ${gameEl._clueIdx + 1}`;
+  } else {
+    btn.textContent = 'All clues revealed — pick the artery!';
+    btn.disabled = true;
+  }
+}
+
+function pickElim(gi, artery) {
+  const container = document.getElementById('elim-game-container');
+  const gameEl = container.children[gi];
+  const game = gameEl._game;
+  if (gameEl._solved) return;
+
+  const card = document.getElementById(`elim-card-${gi}-${artery}`);
+  if (card.classList.contains('eliminated')) return;
+
+  if (artery === game.answer) {
+    card.classList.add('winner');
+    gameEl._solved = true;
+    document.getElementById(`elim-explain-${gi}`).classList.add('visible');
+    // Reveal remaining clues
+    game.clues.forEach((_, ci) => {
+      document.getElementById(`elim-clue-${gi}-${ci}`).classList.add('visible');
+    });
+    fireConfetti();
+  } else {
+    card.classList.add('eliminated');
+    card.style.pointerEvents = 'none';
+  }
+}
+
+// ===== QUIZ =====
+const quizPool = [
+  {
+    stem: "A 75-year-old woman presents with sudden onset of right leg weakness and urinary incontinence. Her speech is normal, face is symmetric, and arms have full strength. She seems apathetic and disinterested. Which artery is most likely occluded?",
+    options: ["Middle cerebral artery","Anterior cerebral artery","Posterior cerebral artery","Basilar artery","Lenticulostriate artery"],
+    correct: 1,
+    explain: "Leg weakness with arm/face spared + personality change + urinary incontinence = ACA. The medial cortex supplies the leg motor strip, the micturition center, and behavioral regulation areas. MCA would give face + arm weakness. This combination is a classic ACA presentation."
+  },
+  {
+    stem: "A patient presents with left-sided weakness and decreased sensation in the face, arm, and leg equally. Speech is normal. No visual field deficits. No neglect. MRI shows a small infarct. What is the most likely location?",
+    options: ["Left MCA territory","Right MCA territory","Posterior limb of internal capsule","Occipital cortex","Lateral medulla"],
+    correct: 2,
+    explain: "Pure motor hemiparesis (face + arm + leg equally) with NO cortical signs = lacunar stroke. The posterior limb of the internal capsule bundles all descending motor fibers tightly together — a small infarct here takes out everything. The absence of aphasia, neglect, and visual field cuts rules out cortical strokes."
+  },
+  {
+    stem: "A 60-year-old man suddenly cannot see anything in his left visual field. Confrontation testing shows left homonymous hemianopia. He can read fine print when looking straight ahead. Motor exam is completely normal. Where is the lesion?",
+    options: ["Right optic nerve","Optic chiasm","Right MCA territory","Right PCA territory","Left PCA territory"],
+    correct: 3,
+    explain: "Left homonymous hemianopia with macular sparing = right PCA stroke (occipital cortex). Macular sparing happens because the macula has dual blood supply (MCA + PCA). MCA strokes can also cause hemianopia (optic radiation) but WITHOUT macular sparing. Optic nerve lesion would cause monocular vision loss, not homonymous hemianopia."
+  },
+  {
+    stem: "A patient is found unresponsive. On exam, they are quadriplegic and cannot speak. However, they can blink on command and move their eyes vertically. EEG shows normal waking activity. What is the diagnosis?",
+    options: ["Coma","Persistent vegetative state","Brain death","Locked-in syndrome","Psychogenic unresponsiveness"],
+    correct: 3,
+    explain: "Locked-in syndrome = ventral pons destruction (basilar artery occlusion). The patient is FULLY CONSCIOUS but can only communicate through vertical eye movements (CN III nucleus is in the midbrain, above the pontine lesion). EEG confirms wakefulness. This is NOT coma (coma = no consciousness). Not PVS (PVS has sleep-wake cycles but no awareness)."
+  },
+  {
+    stem: "A 68-year-old woman presents with difficulty swallowing, hoarseness, right-sided ataxia, and a right Horner syndrome. Pain and temperature sensation is decreased on the right face and left body. Which artery is affected?",
+    options: ["Right MCA","Right ACA","Right PICA","Right AICA","Basilar trunk"],
+    correct: 2,
+    explain: "This is Wallenberg syndrome (lateral medullary syndrome) from RIGHT PICA occlusion. The crossed findings are classic: ipsilateral (right) face pain/temp loss + contralateral (left) body pain/temp loss. Plus ipsilateral Horner's, ataxia, dysphagia, and hoarseness from CN IX/X involvement. AICA would give hearing loss and facial paralysis instead."
+  },
+  {
+    stem: "A 70-year-old right-handed man suddenly cannot speak. He appears frustrated and gestures that he understands you. He can write his name. His right arm and face are weak. Which area is damaged?",
+    options: ["Wernicke's area (left superior temporal)","Broca's area (left inferior frontal)","Arcuate fasciculus","Right parietal lobe","Left thalamus"],
+    correct: 1,
+    explain: "Expressive (Broca's) aphasia: can understand but can't produce fluent speech. Located in the left inferior frontal gyrus (Broca's area), supplied by the LEFT MCA. The right face/arm weakness confirms left hemisphere (motor fibers cross in the medulla). Wernicke's would give fluent but nonsensical speech with poor comprehension."
+  },
+  {
+    stem: "A patient with long-standing hypertension presents with sudden right arm clumsiness and slurred speech. Strength is 4/5 in the right arm, 5/5 everywhere else. Sensation is intact. No aphasia or neglect. Most likely diagnosis?",
+    options: ["Left MCA stroke","Left ACA stroke","Dysarthria-clumsy hand syndrome (lacunar)","Right cerebellar stroke","TIA"],
+    correct: 2,
+    explain: "Dysarthria-clumsy hand syndrome is a classic lacunar syndrome. Mild arm weakness + dysarthria with NO cortical signs in a hypertensive patient = small vessel disease affecting the basis pontis or genu of the internal capsule. MCA would give cortical signs. The purity of the syndrome (just motor, no sensory, no cortical signs) is the lacunar giveaway."
+  },
+  {
+    stem: "A 55-year-old woman suddenly can't recognize her husband's face, though she can recognize his voice immediately. MRI shows bilateral occipitotemporal infarcts. What is this condition called?",
+    options: ["Visual agnosia","Prosopagnosia","Alexia without agraphia","Anton syndrome","Hemispatial neglect"],
+    correct: 1,
+    explain: "Prosopagnosia = inability to recognize faces despite intact vision. Caused by bilateral damage to the fusiform face area in the inferior temporal lobe (PCA territory). She recognizes his voice = auditory recognition intact. Visual agnosia is broader (can't identify objects by sight). Anton syndrome is cortical blindness with denial of blindness."
+  },
+  {
+    stem: "A patient presents with right face and arm weakness, right homonymous hemianopia, and speaks fluently but makes no sense. They cannot follow commands. Which vessel is most likely occluded?",
+    options: ["Left ACA","Left MCA (superior division)","Left MCA (inferior division)","Left PCA","Right MCA"],
+    correct: 2,
+    explain: "Wernicke's aphasia (fluent but nonsensical speech, poor comprehension) = left superior temporal gyrus. Combined with right hemianopia = temporal-parietal involvement. This is the LEFT MCA inferior division, which supplies Wernicke's area and the optic radiation. Superior division would give Broca's aphasia instead."
+  },
+  {
+    stem: "A patient is brought in with left leg weakness. Right leg and both arms are fine. He also seems unusually flat and apathetic — his wife says 'he just doesn't care about anything.' CT shows infarction of the medial right frontal cortex. What is the artery?",
+    options: ["Right MCA","Right ACA","Right PCA","Basilar","Left ACA"],
+    correct: 1,
+    explain: "Right ACA: the leg motor strip wraps over the medial surface. Right ACA infarct = LEFT leg weakness (contralateral). Apathy and flat affect = medial frontal lobe damage (personality/behavioral regulation). MCA would give arm + face weakness. The medial location on CT confirms ACA territory."
+  }
+];
+
+function buildQuiz() {
+  const container = document.getElementById('quiz-container');
+  const shuffled = quizPool.sort(() => Math.random() - 0.5).slice(0, 4);
+  shuffled.forEach((q, qi) => {
+    const qEl = document.createElement('div');
+    qEl.className = 'quiz-q';
+    // Shuffle options
+    const optIndices = q.options.map((_, i) => i).sort(() => Math.random() - 0.5);
+    const newCorrect = optIndices.indexOf(q.correct);
+    let html = `<div class="q-num">Question ${qi + 1}</div><div class="q-stem">${q.stem}</div><div class="quiz-options">`;
+    optIndices.forEach((oi, di) => {
+      html += `<button class="quiz-opt" onclick="pickQuiz(this,${di},${newCorrect},${qi})">${String.fromCharCode(65 + di)}. ${q.options[oi]}</button>`;
+    });
+    html += `</div><div class="quiz-explain" id="quiz-explain-${qi}">${q.explain}</div>`;
+    qEl.innerHTML = html;
+    container.appendChild(qEl);
+  });
+}
+
+function pickQuiz(btn, picked, correct, qi) {
+  const parent = btn.closest('.quiz-q');
+  if (parent.dataset.answered) return;
+  parent.dataset.answered = 'true';
+
+  const opts = parent.querySelectorAll('.quiz-opt');
+  opts.forEach((o, i) => {
+    if (i === correct) o.classList.add('correct');
+    else if (i === picked && picked !== correct) o.classList.add('wrong');
+    else o.classList.add('dimmed');
+  });
+  document.getElementById(`quiz-explain-${qi}`).classList.add('visible');
+  if (picked === correct) fireConfetti();
+}
+
+// ===== CONFETTI =====
+function fireConfetti() {
+  const canvas = document.getElementById('confetti');
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  const particles = [];
+  const colors = ['#f97316','#3b82f6','#a855f7','#22c55e','#ef4444','#fde047'];
+  for (let i = 0; i < 80; i++) {
+    particles.push({
+      x: Math.random() * canvas.width,
+      y: -10 - Math.random() * 50,
+      vx: (Math.random() - 0.5) * 6,
+      vy: Math.random() * 4 + 2,
+      w: Math.random() * 8 + 4,
+      h: Math.random() * 6 + 3,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      rot: Math.random() * 360,
+      rv: (Math.random() - 0.5) * 10,
+      life: 120 + Math.random() * 60
+    });
+  }
+  let frame = 0;
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    let alive = false;
+    particles.forEach(p => {
+      if (p.life <= 0) return;
+      alive = true;
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += 0.1;
+      p.rot += p.rv;
+      p.life--;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot * Math.PI / 180);
+      ctx.globalAlpha = Math.min(1, p.life / 30);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+      ctx.restore();
+    });
+    if (alive) requestAnimationFrame(draw);
+    else ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+  draw();
+}
+
+// ===== TOOLTIPS =====
+document.querySelectorAll('.tip').forEach(t => {
+  t.addEventListener('click', e => {
+    e.stopPropagation();
+    document.querySelectorAll('.tip.active').forEach(a => { if (a !== t) a.classList.remove('active'); });
+    t.classList.toggle('active');
+  });
+});
+document.addEventListener('click', () => document.querySelectorAll('.tip.active').forEach(a => a.classList.remove('active')));
+
+// ===== INIT =====
+buildElimGames();
+buildQuiz();
+</script>
+
+</body>
+</html>

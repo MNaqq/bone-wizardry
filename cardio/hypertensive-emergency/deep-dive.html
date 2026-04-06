@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hypertensive Emergency Deep Dive — Bone Wizardry</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'JetBrains Mono', monospace;
+    background: linear-gradient(180deg, #020617 0%, #0f172a 100%);
+    color: #e2e8f0;
+    min-height: 100vh;
+    padding: 2rem 1rem;
+    line-height: 1.6;
+  }
+  a { text-decoration: none; }
+
+  .nav { display: flex; justify-content: center; gap: 0.75rem; margin-bottom: 2rem; flex-wrap: wrap; }
+  .nav-link {
+    padding: 0.5rem 1rem; border-radius: 0.75rem; font-size: 0.75rem; font-weight: 700;
+    border: 2px solid #334155; color: #94a3b8; transition: all 0.3s; cursor: pointer;
+    font-family: inherit;
+  }
+  .nav-link:hover { border-color: #ef4444; color: #ef4444; background: #ef444410; }
+  .nav-link.active { border-color: #ef4444; color: #ef4444; background: #ef444410; }
+
+  .header { text-align: center; margin-bottom: 2rem; }
+  .header-sub { color: #64748b; font-size: 0.7rem; letter-spacing: 0.4em; text-transform: uppercase; margin-bottom: 0.5rem; }
+  .header h1 {
+    font-size: 2rem; font-weight: 900;
+    background: linear-gradient(135deg, #ef4444, #f59e0b, #a855f7);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .header-desc { color: #64748b; font-size: 0.75rem; margin-top: 0.5rem; }
+
+  /* Chunk cards */
+  .chunks { max-width: 48rem; margin: 0 auto; }
+  .chunk {
+    border: 2px solid #1e293b; border-radius: 1rem; padding: 1.5rem; margin-bottom: 1.25rem;
+    background: #0f172a; transition: all 0.3s; cursor: pointer; position: relative;
+    overflow: hidden;
+  }
+  .chunk:hover { border-color: #334155; }
+  .chunk.open { border-color: var(--accent); box-shadow: 0 0 30px color-mix(in srgb, var(--accent) 15%, transparent); }
+  .chunk-header { display: flex; align-items: center; gap: 0.75rem; }
+  .chunk-num {
+    width: 2rem; height: 2rem; border-radius: 0.5rem; display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 0.8rem; color: #fff; flex-shrink: 0;
+  }
+  .chunk-title { font-weight: 700; font-size: 0.95rem; color: #f1f5f9; flex: 1; }
+  .chunk-toggle { color: #475569; font-size: 1.2rem; transition: transform 0.3s; }
+  .chunk.open .chunk-toggle { transform: rotate(180deg); }
+  .chunk-body { max-height: 0; overflow: hidden; transition: max-height 0.4s ease, padding 0.3s; }
+  .chunk.open .chunk-body { max-height: 4000px; padding-top: 1rem; }
+
+  /* Content styles */
+  .chunk-body p { color: #94a3b8; font-size: 0.85rem; margin-bottom: 0.75rem; }
+  .chunk-body .highlight {
+    display: inline; padding: 0.1rem 0.4rem; border-radius: 0.25rem; font-weight: 700;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .highlight:hover { filter: brightness(1.3); }
+  .hl-red { background: #ef444425; color: #fca5a5; border: 1px solid #ef444444; }
+  .hl-blue { background: #3b82f625; color: #93c5fd; border: 1px solid #3b82f644; }
+  .hl-yellow { background: #eab30825; color: #fde047; border: 1px solid #eab30844; }
+  .hl-green { background: #22c55e25; color: #86efac; border: 1px solid #22c55e44; }
+  .hl-purple { background: #a855f725; color: #c4b5fd; border: 1px solid #a855f744; }
+  .hl-orange { background: #f59e0b25; color: #fcd34d; border: 1px solid #f59e0b44; }
+  .hl-pink { background: #ec489925; color: #f9a8d4; border: 1px solid #ec489944; }
+  .hl-cyan { background: #06b6d425; color: #67e8f9; border: 1px solid #06b6d444; }
+
+  .key-fact {
+    padding: 0.75rem 1rem; border-radius: 0.75rem; margin: 0.75rem 0; font-size: 0.8rem;
+    font-weight: 600; display: flex; align-items: flex-start; gap: 0.5rem;
+  }
+  .key-fact .icon { font-size: 1rem; flex-shrink: 0; }
+
+  .mini-table { width: 100%; border-collapse: collapse; margin: 0.75rem 0; font-size: 0.75rem; }
+  .mini-table th {
+    padding: 0.6rem 0.75rem; text-align: left; font-weight: 700; font-size: 0.65rem;
+    letter-spacing: 0.1em; text-transform: uppercase; color: #64748b; background: #1e293b;
+  }
+  .mini-table td { padding: 0.6rem 0.75rem; border-bottom: 1px solid #1e293b; color: #cbd5e1; }
+  .mini-table tr:hover { background: #ffffff08; }
+
+  .mnemonic {
+    text-align: center; padding: 1rem; border-radius: 0.75rem; margin: 0.75rem 0;
+    font-weight: 800; font-size: 1.1rem; letter-spacing: 0.05em;
+  }
+
+  /* Answer explanations */
+  .answer-grid { display: grid; gap: 0.75rem; margin: 0.75rem 0; }
+  .answer-card {
+    padding: 1rem; border-radius: 0.75rem; border: 1px solid #1e293b; background: #0f172a;
+    transition: all 0.3s; cursor: pointer;
+  }
+  .answer-card:hover { border-color: #334155; }
+  .answer-card.correct { border-color: #22c55e44; background: #22c55e08; }
+  .answer-card.wrong { border-color: #ef444422; }
+  .answer-letter {
+    font-weight: 800; font-size: 0.8rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;
+  }
+  .answer-text { color: #94a3b8; font-size: 0.8rem; }
+
+  .footer { text-align: center; color: #334155; font-size: 0.7rem; margin-top: 2.5rem; letter-spacing: 0.1em; }
+
+  /* Tooltips */
+  .tip {
+    position: relative; cursor: help;
+    border-bottom: 1px dashed currentColor;
+  }
+  .tip .tip-text {
+    visibility: hidden; opacity: 0;
+    position: absolute; bottom: 125%; left: 50%; transform: translateX(-50%);
+    background: #1e293b; color: #e2e8f0; border: 1px solid #475569; border-radius: 0.5rem;
+    padding: 0.5rem 0.75rem; font-size: 0.7rem; font-weight: 400; line-height: 1.4;
+    width: max-content; max-width: 280px; z-index: 100;
+    transition: opacity 0.2s, visibility 0.2s;
+    box-shadow: 0 4px 20px #00000066;
+    pointer-events: none;
+  }
+  .tip .tip-text::after {
+    content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+    border: 6px solid transparent; border-top-color: #475569;
+  }
+  .tip:hover .tip-text, .tip:focus .tip-text, .tip.active .tip-text {
+    visibility: visible; opacity: 1;
+  }
+  @media (max-width: 600px) {
+    .tip .tip-text { left: 0; transform: none; max-width: 220px; }
+  }
+
+  /* Drug comparison cards */
+  .drug-card {
+    border: 2px solid #1e293b; border-radius: 1rem; padding: 1.25rem; margin: 0.75rem 0;
+    background: #0f172a; transition: all 0.3s;
+  }
+  .drug-card:hover { border-color: var(--dc); box-shadow: 0 4px 20px color-mix(in srgb, var(--dc) 10%, transparent); }
+  .drug-name { font-weight: 800; font-size: 1rem; margin-bottom: 0.5rem; }
+  .drug-moa { color: #94a3b8; font-size: 0.8rem; margin-bottom: 0.5rem; }
+  .drug-tags { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: 0.5rem; }
+  .drug-tag {
+    padding: 0.15rem 0.5rem; border-radius: 9999px; font-size: 0.6rem; font-weight: 700;
+  }
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <a href="/" class="nav-link">Home</a>
+  <a href="../index.html" class="nav-link">Cardio</a>
+  <span class="nav-link active">Deep Dive</span>
+</div>
+
+<div class="header">
+  <p class="header-sub">COMLEX Review — Cardiovascular</p>
+  <h1>Hypertensive Emergency</h1>
+  <p class="header-desc">Bite-sized chunks. Tap to expand. Learn one piece at a time.</p>
+</div>
+
+<div class="chunks">
+
+  <!-- CHUNK 1: The Big Picture -->
+  <div class="chunk" style="--accent: #ef4444" onclick="this.classList.toggle('open')">
+    <div class="chunk-header">
+      <div class="chunk-num" style="background: #ef4444">1</div>
+      <div class="chunk-title">The Big Picture: Emergency vs Urgency</div>
+      <div class="chunk-toggle">&#9660;</div>
+    </div>
+    <div class="chunk-body">
+      <p>First, know the difference. Boards LOVE this distinction:</p>
+      <div class="mnemonic" style="background: #ef444415; border: 1px solid #ef444433; color: #fca5a5;">
+        <span class="tip">Hypertensive Emergency<span class="tip-text">BP > 180/120 WITH acute end-organ damage. This is what kills people — you must treat NOW with IV meds.</span></span>
+        = BP > 180/120 + <span class="highlight hl-red">organ damage</span>
+      </div>
+      <div class="mnemonic" style="background: #f59e0b15; border: 1px solid #f59e0b33; color: #fcd34d;">
+        <span class="tip">Hypertensive Urgency<span class="tip-text">BP > 180/120 WITHOUT organ damage. Scary numbers but the patient is stable. Treat with oral meds, bring down slowly over 24-48 hours.</span></span>
+        = BP > 180/120 + <span class="highlight hl-green">no organ damage</span>
+      </div>
+      <p>The <span class="highlight hl-red">organs at risk</span> — and how damage presents:</p>
+      <table class="mini-table">
+        <tr><th>Organ</th><th>How damage shows up</th></tr>
+        <tr><td><span class="highlight hl-pink">Brain</span></td><td>Encephalopathy, stroke, headache, vision changes, papilledema</td></tr>
+        <tr><td><span class="highlight hl-red">Heart</span></td><td>Acute MI, aortic dissection, acute heart failure / pulmonary edema</td></tr>
+        <tr><td><span class="highlight hl-blue">Kidneys</span></td><td>Acute kidney injury, hematuria, rising creatinine</td></tr>
+        <tr><td><span class="highlight hl-purple">Eyes</span></td><td>Retinal hemorrhages, papilledema</td></tr>
+        <tr><td><span class="highlight hl-orange">Vessels</span></td><td>Aortic dissection, microangiopathic hemolytic anemia</td></tr>
+      </table>
+      <div class="key-fact" style="background: #ef444412; border: 1px solid #ef444433; color: #fca5a5;">
+        <span class="icon">&#9888;</span> <strong>Board rule:</strong> Emergency = IV drugs in the ICU. Urgency = oral drugs, bring down slowly. Dropping BP too fast in urgency can cause stroke.
+      </div>
+      <p><span class="highlight hl-yellow">Goal:</span> Reduce MAP by <span class="highlight hl-green">no more than 25%</span> in the first hour. Then gradually to 160/100 over the next 2-6 hours. Exception: aortic dissection (drop FAST).</p>
+    </div>
+  </div>
+
+  <!-- CHUNK 2: Fenoldopam — The Star -->
+  <div class="chunk" style="--accent: #06b6d4" onclick="this.classList.toggle('open')">
+    <div class="chunk-header">
+      <div class="chunk-num" style="background: #06b6d4">2</div>
+      <div class="chunk-title">Fenoldopam — The Kidney Protector</div>
+      <div class="chunk-toggle">&#9660;</div>
+    </div>
+    <div class="chunk-body">
+      <div class="mnemonic" style="background: #06b6d415; border: 1px solid #06b6d433; color: #67e8f9;">
+        Fenoldopam is a(n) <span class="highlight hl-cyan">D<sub>1</sub> receptor agonist</span> that may be used in the treatment of <span class="highlight hl-red">hypertensive emergency</span> to prevent <span class="highlight hl-blue">kidney</span> damage
+      </div>
+
+      <p style="font-weight:700; color: #67e8f9; margin-top: 0.75rem;">How does it work?</p>
+      <p><span class="highlight hl-cyan"><span class="tip">Fenoldopam<span class="tip-text">A selective dopamine D1 receptor agonist. Given IV only. Onset in 5 minutes, duration 30-60 minutes. Easy to titrate.</span></span></span> selectively activates <span class="highlight hl-cyan">D<sub>1</sub> receptors</span> on <span class="tip">renal and splanchnic vasculature<span class="tip-text">The blood vessels supplying the kidneys and gut. D1 receptors here cause vasodilation, increasing blood flow to these organs even as systemic BP drops.</span></span>. This does two things at once:</p>
+
+      <div class="key-fact" style="background: #3b82f612; border: 1px solid #3b82f633; color: #93c5fd;">
+        <span class="icon">1.</span> <span><strong>Drops BP</strong> — Peripheral vasodilation reduces systemic vascular resistance. Afterload goes down, BP goes down.</span>
+      </div>
+      <div class="key-fact" style="background: #22c55e12; border: 1px solid #22c55e33; color: #86efac;">
+        <span class="icon">2.</span> <span><strong>Protects the kidneys</strong> — D<sub>1</sub> activation <span class="highlight hl-green">dilates renal arteries</span>, increasing renal blood flow and GFR. It also promotes <span class="tip">natriuresis<span class="tip-text">Excretion of sodium in urine. By blocking Na⁺ reabsorption in the proximal tubule, fenoldopam acts as a mild diuretic without depleting potassium as aggressively as loop diuretics.</span></span> (sodium excretion). So even while BP drops, the kidneys get MORE blood, not less.</span>
+      </div>
+
+      <p>This is why fenoldopam is the go-to when you're worried about <span class="highlight hl-blue">renal damage</span> during a hypertensive crisis. Other IV drugs drop BP but may <em>decrease</em> renal perfusion. Fenoldopam does the opposite.</p>
+
+      <table class="mini-table">
+        <tr><th>Feature</th><th>Fenoldopam</th></tr>
+        <tr><td>Receptor</td><td><span class="highlight hl-cyan">D<sub>1</sub> agonist</span> (selective)</td></tr>
+        <tr><td>Route</td><td>IV infusion only</td></tr>
+        <tr><td>Onset</td><td>5 minutes</td></tr>
+        <tr><td>Duration</td><td>30-60 minutes</td></tr>
+        <tr><td>Renal effect</td><td><span class="highlight hl-green">Increases renal blood flow</span></td></tr>
+        <tr><td>Special use</td><td>HTN emergency with <span class="highlight hl-blue">renal impairment</span></td></tr>
+        <tr><td>Side effects</td><td>Tachycardia (reflex), headache, flushing</td></tr>
+      </table>
+
+      <div class="key-fact" style="background: #ef444412; border: 1px solid #ef444433; color: #fca5a5;">
+        <span class="icon">&#9888;</span> <strong>Contraindication:</strong> <span class="highlight hl-red">Glaucoma</span>. Fenoldopam increases intraocular pressure. This is a classic board trap — don't pick fenoldopam if the patient has glaucoma.
+      </div>
+
+      <div class="key-fact" style="background: #eab30812; border: 1px solid #eab30833; color: #fde047;">
+        <span class="icon">&#128161;</span> <strong>Board pearl:</strong> "Hypertensive emergency + renal failure" = think Fenoldopam. It's the ONLY antihypertensive that <em>increases</em> renal perfusion while lowering BP.
+      </div>
+    </div>
+  </div>
+
+  <!-- CHUNK 3: The Drug Lineup -->
+  <div class="chunk" style="--accent: #a855f7" onclick="this.classList.toggle('open')">
+    <div class="chunk-header">
+      <div class="chunk-num" style="background: #a855f7">3</div>
+      <div class="chunk-title">The Full Drug Lineup</div>
+      <div class="chunk-toggle">&#9660;</div>
+    </div>
+    <div class="chunk-body">
+      <p>Boards want you to match the <span class="highlight hl-purple">right drug</span> to the <span class="highlight hl-red">right scenario</span>. Here's the lineup:</p>
+
+      <div class="drug-card" style="--dc: #06b6d4">
+        <div class="drug-name" style="color: #67e8f9;">&#128138; Fenoldopam</div>
+        <div class="drug-moa"><span class="highlight hl-cyan">D<sub>1</sub> agonist</span> — renal vasodilation + systemic vasodilation</div>
+        <p style="color: #94a3b8; font-size: 0.8rem;">USE: HTN emergency with <span class="highlight hl-blue">renal compromise</span>. Protects kidneys while dropping BP.</p>
+        <div class="drug-tags">
+          <span class="drug-tag" style="background:#06b6d420;color:#67e8f9;border:1px solid #06b6d444">Renal protective</span>
+          <span class="drug-tag" style="background:#ef444420;color:#fca5a5;border:1px solid #ef444444">Avoid in glaucoma</span>
+        </div>
+      </div>
+
+      <div class="drug-card" style="--dc: #ef4444">
+        <div class="drug-name" style="color: #fca5a5;">&#128138; Nitroprusside</div>
+        <div class="drug-moa"><span class="highlight hl-red"><span class="tip">NO donor<span class="tip-text">Releases nitric oxide (NO), which activates guanylate cyclase → cGMP → smooth muscle relaxation. Dilates both arteries AND veins — drops preload AND afterload.</span></span></span> — arterial + venous dilation</div>
+        <p style="color: #94a3b8; font-size: 0.8rem;">USE: Most HTN emergencies (first-line historically). <span class="highlight hl-red">Watch for cyanide toxicity</span> with prolonged use (>48-72h). Monitor thiocyanate levels.</p>
+        <div class="drug-tags">
+          <span class="drug-tag" style="background:#ef444420;color:#fca5a5;border:1px solid #ef444444">Cyanide risk</span>
+          <span class="drug-tag" style="background:#f59e0b20;color:#fcd34d;border:1px solid #f59e0b44">Light-sensitive</span>
+        </div>
+      </div>
+
+      <div class="drug-card" style="--dc: #22c55e">
+        <div class="drug-name" style="color: #86efac;">&#128138; Labetalol</div>
+        <div class="drug-moa"><span class="highlight hl-green"><span class="tip">Alpha-1 + Beta blocker<span class="tip-text">Blocks both alpha-1 (vasodilation) and beta-1/beta-2 (slows heart, reduces contractility). The alpha:beta ratio is 1:3 IV. Does NOT cause reflex tachycardia.</span></span></span> — combined blockade</div>
+        <p style="color: #94a3b8; font-size: 0.8rem;">USE: <span class="highlight hl-green">Pregnancy</span> (eclampsia), stroke, aortic dissection. Safe in pregnancy — that's the big differentiator.</p>
+        <div class="drug-tags">
+          <span class="drug-tag" style="background:#22c55e20;color:#86efac;border:1px solid #22c55e44">Safe in pregnancy</span>
+          <span class="drug-tag" style="background:#a855f720;color:#c4b5fd;border:1px solid #a855f744">No reflex tachy</span>
+        </div>
+      </div>
+
+      <div class="drug-card" style="--dc: #f59e0b">
+        <div class="drug-name" style="color: #fcd34d;">&#128138; Nicardipine</div>
+        <div class="drug-moa"><span class="highlight hl-orange"><span class="tip">DHP Calcium Channel Blocker<span class="tip-text">Dihydropyridine CCB — selectively blocks L-type calcium channels in vascular smooth muscle. Vasodilates without significantly affecting heart rate or conduction (unlike verapamil/diltiazem).</span></span></span> — arterial vasodilation</div>
+        <p style="color: #94a3b8; font-size: 0.8rem;">USE: <span class="highlight hl-orange">Stroke</span>, post-op hypertension. Predictable, easy to titrate. Good cerebral vasodilation.</p>
+        <div class="drug-tags">
+          <span class="drug-tag" style="background:#f59e0b20;color:#fcd34d;border:1px solid #f59e0b44">Stroke-friendly</span>
+          <span class="drug-tag" style="background:#3b82f620;color:#93c5fd;border:1px solid #3b82f644">Easy titration</span>
+        </div>
+      </div>
+
+      <div class="drug-card" style="--dc: #ec4899">
+        <div class="drug-name" style="color: #f9a8d4;">&#128138; Clevidipine</div>
+        <div class="drug-moa"><span class="highlight hl-pink">Ultra-short-acting DHP CCB</span> — arterial only</div>
+        <p style="color: #94a3b8; font-size: 0.8rem;">USE: Peri-operative HTN. Metabolized by <span class="tip">esterases in blood<span class="tip-text">Broken down by enzymes in the blood itself — doesn't need liver or kidney. So it works the same regardless of organ function. Half-life is ~1 minute.</span></span> (not liver/kidney). Half-life ~1 min.</p>
+        <div class="drug-tags">
+          <span class="drug-tag" style="background:#ec489920;color:#f9a8d4;border:1px solid #ec489944">Ultra-short</span>
+          <span class="drug-tag" style="background:#ef444420;color:#fca5a5;border:1px solid #ef444444">Lipid emulsion — avoid in egg/soy allergy</span>
+        </div>
+      </div>
+
+      <div class="drug-card" style="--dc: #3b82f6">
+        <div class="drug-name" style="color: #93c5fd;">&#128138; Esmolol</div>
+        <div class="drug-moa"><span class="highlight hl-blue"><span class="tip">Beta-1 selective blocker<span class="tip-text">Only blocks beta-1 receptors (heart). Ultra-short acting — metabolized by red blood cell esterases. Half-life ~9 minutes. Perfect when you need precise, brief beta-blockade.</span></span></span> — ultra-short acting</div>
+        <p style="color: #94a3b8; font-size: 0.8rem;">USE: <span class="highlight hl-blue">Aortic dissection</span> (with nitroprusside). Rate control priority. Also peri-op.</p>
+        <div class="drug-tags">
+          <span class="drug-tag" style="background:#3b82f620;color:#93c5fd;border:1px solid #3b82f644">Aortic dissection</span>
+          <span class="drug-tag" style="background:#22c55e20;color:#86efac;border:1px solid #22c55e44">Ultra-short</span>
+        </div>
+      </div>
+
+      <div class="key-fact" style="background: #a855f712; border: 1px solid #a855f733; color: #c4b5fd;">
+        <span class="icon">&#128161;</span> <strong>Aortic dissection rule:</strong> ALWAYS start <span class="highlight hl-blue">beta-blocker FIRST</span> (esmolol or labetalol) to drop heart rate, THEN add vasodilator if needed. If you vasodilate first, reflex tachycardia increases aortic shear stress and worsens the dissection.
+      </div>
+    </div>
+  </div>
+
+  <!-- CHUNK 4: Scenario Matching -->
+  <div class="chunk" style="--accent: #22c55e" onclick="this.classList.toggle('open')">
+    <div class="chunk-header">
+      <div class="chunk-num" style="background: #22c55e">4</div>
+      <div class="chunk-title">COMLEX Speed Run — Match the Scenario</div>
+      <div class="chunk-toggle">&#9660;</div>
+    </div>
+    <div class="chunk-body">
+      <p>The board question is always: <span class="highlight hl-green">"Which drug do you pick?"</span> Here's the cheat sheet:</p>
+
+      <table class="mini-table">
+        <tr><th>Scenario</th><th>Drug of Choice</th><th>Why</th></tr>
+        <tr><td><span class="highlight hl-blue">Renal compromise</span></td><td><span class="highlight hl-cyan">Fenoldopam</span></td><td>Only drug that increases renal blood flow</td></tr>
+        <tr><td><span class="highlight hl-green">Pregnancy / Eclampsia</span></td><td><span class="highlight hl-green">Labetalol</span> (or hydralazine)</td><td>Safe in pregnancy; also give MgSO₄ for seizures</td></tr>
+        <tr><td><span class="highlight hl-blue">Aortic dissection</span></td><td><span class="highlight hl-blue">Esmolol</span> (or labetalol)</td><td>Must reduce heart rate AND BP; beta-blocker first</td></tr>
+        <tr><td><span class="highlight hl-orange">Acute stroke</span></td><td><span class="highlight hl-orange">Nicardipine</span> (or labetalol)</td><td>Predictable, good cerebral perfusion</td></tr>
+        <tr><td><span class="highlight hl-pink">Peri-operative</span></td><td><span class="highlight hl-pink">Clevidipine</span> (or esmolol)</td><td>Ultra-short, easy on/off</td></tr>
+        <tr><td><span class="highlight hl-red">Most emergencies (general)</span></td><td><span class="highlight hl-red">Nitroprusside</span></td><td>Most potent; watch cyanide with prolonged use</td></tr>
+        <tr><td><span class="highlight hl-purple">Pheochromocytoma</span></td><td><span class="highlight hl-purple">Phentolamine</span></td><td>Alpha blocker for catecholamine surge</td></tr>
+      </table>
+
+      <div class="key-fact" style="background: #22c55e12; border: 1px solid #22c55e33; color: #86efac;">
+        <span class="icon">&#128161;</span> <strong>Memory trick:</strong> <span class="highlight hl-cyan">"Feno = kidney FRIEND"</span> — Fenoldopam is the only one that's specifically renal-protective. If the stem mentions creatinine, AKI, or renal insufficiency, fenoldopam is probably the answer.
+      </div>
+    </div>
+  </div>
+
+  <!-- CHUNK 5: Practice Vignette -->
+  <div class="chunk" style="--accent: #ec4899" onclick="this.classList.toggle('open')">
+    <div class="chunk-header">
+      <div class="chunk-num" style="background: #ec4899">5</div>
+      <div class="chunk-title">Practice Vignette — Walk Through It</div>
+      <div class="chunk-toggle">&#9660;</div>
+    </div>
+    <div class="chunk-body">
+      <div class="key-fact" style="background: #1e293b; border: 1px solid #334155; color: #e2e8f0;">
+        <span class="icon">&#128203;</span>
+        <span>A 58-year-old man with a history of <span class="highlight hl-purple">CKD stage 3</span> and diabetes presents to the ED with BP <span class="highlight hl-red">220/130</span>, headache, and blurry vision. Labs show <span class="highlight hl-blue">creatinine 3.2 mg/dL</span> (baseline 1.8). Urinalysis shows proteinuria and hematuria. What is the best IV antihypertensive?</span>
+      </div>
+
+      <p style="font-weight:700; color: #f9a8d4; margin-top: 0.75rem;">Think through it:</p>
+      <p><span class="highlight hl-red">BP > 180/120</span> + headache + blurry vision + rising creatinine = <span class="highlight hl-red">hypertensive emergency</span> with <span class="highlight hl-blue">acute kidney injury</span>.</p>
+      <p>The creatinine jumped from 1.8 to 3.2 — this patient's kidneys are taking a hit RIGHT NOW. You need a drug that drops BP while <span class="highlight hl-green">protecting renal blood flow</span>.</p>
+
+      <div class="answer-grid" style="margin-top: 1rem;">
+        <div class="answer-card wrong">
+          <div class="answer-letter" style="color: #ef4444;">A. Nitroprusside</div>
+          <div class="answer-text">Powerful but can cause <span class="highlight hl-red">cyanide toxicity</span> and may decrease renal perfusion. Not ideal when kidneys are already failing — they can't clear thiocyanate well either.</div>
+        </div>
+        <div class="answer-card wrong">
+          <div class="answer-letter" style="color: #f59e0b;">B. Labetalol</div>
+          <div class="answer-text">Good general choice, but it doesn't offer specific renal protection. Fine for many emergencies, but not the BEST when the stem screams "save the kidneys."</div>
+        </div>
+        <div class="answer-card correct">
+          <div class="answer-letter" style="color: #22c55e;">C. Fenoldopam &#10003;</div>
+          <div class="answer-text"><span class="highlight hl-cyan">D<sub>1</sub> agonist</span> that lowers BP while <span class="highlight hl-green">increasing renal blood flow</span>. CKD + rising creatinine + hypertensive emergency = fenoldopam is the answer. It's the only choice that actively protects the kidneys.</div>
+        </div>
+        <div class="answer-card wrong">
+          <div class="answer-letter" style="color: #a855f7;">D. Esmolol</div>
+          <div class="answer-text">Ultra-short beta-blocker. Great for aortic dissection and rate control, but doesn't offer renal protection. Not the best choice when AKI is the main concern.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHUNK 6: Board Traps -->
+  <div class="chunk" style="--accent: #f97316" onclick="this.classList.toggle('open')">
+    <div class="chunk-header">
+      <div class="chunk-num" style="background: #f97316">6</div>
+      <div class="chunk-title">Board Traps — Don't Fall For These</div>
+      <div class="chunk-toggle">&#9660;</div>
+    </div>
+    <div class="chunk-body">
+      <div class="key-fact" style="background: #ef444412; border: 1px solid #ef444433; color: #fca5a5;">
+        <span class="icon">&#9888;</span> <strong>Trap 1:</strong> Picking fenoldopam for a patient with <span class="highlight hl-red">glaucoma</span>. Fenoldopam increases intraocular pressure. If the stem mentions glaucoma, pick a different drug.
+      </div>
+      <div class="key-fact" style="background: #f59e0b12; border: 1px solid #f59e0b33; color: #fcd34d;">
+        <span class="icon">&#9888;</span> <strong>Trap 2:</strong> Starting a <span class="highlight hl-orange">vasodilator first</span> in aortic dissection. ALWAYS beta-blocker first. Vasodilators alone cause reflex tachycardia which increases aortic wall shear stress.
+      </div>
+      <div class="key-fact" style="background: #a855f712; border: 1px solid #a855f733; color: #c4b5fd;">
+        <span class="icon">&#9888;</span> <strong>Trap 3:</strong> Confusing <span class="highlight hl-purple">emergency vs urgency</span>. High BP alone (even 220/130) is NOT an emergency without organ damage. Don't slam IV drugs for urgency — you can cause a stroke from dropping BP too fast.
+      </div>
+      <div class="key-fact" style="background: #3b82f612; border: 1px solid #3b82f633; color: #93c5fd;">
+        <span class="icon">&#9888;</span> <strong>Trap 4:</strong> Using <span class="highlight hl-blue">ACE inhibitors</span> in acute hypertensive emergency. ACE-i are ORAL and slow-acting — they're for long-term management, not acute crises. Boards may tempt you with enalaprilat (IV ACE-i) but it's unpredictable and risky in renal artery stenosis.
+      </div>
+      <div class="key-fact" style="background: #22c55e12; border: 1px solid #22c55e33; color: #86efac;">
+        <span class="icon">&#9888;</span> <strong>Trap 5:</strong> Forgetting that <span class="highlight hl-green">nitroprusside</span> needs <span class="highlight hl-red">thiocyanate monitoring</span> and is dangerous in renal/hepatic failure. Cyanide can't be cleared properly.
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<p class="footer">Bone Wizardry — Hypertensive Emergency Deep Dive</p>
+
+<script>
+// Tap-to-toggle tooltips on mobile
+document.querySelectorAll('.tip').forEach(tip => {
+  tip.addEventListener('click', e => {
+    e.stopPropagation();
+    const wasActive = tip.classList.contains('active');
+    document.querySelectorAll('.tip.active').forEach(t => t.classList.remove('active'));
+    if (!wasActive) tip.classList.add('active');
+  });
+});
+document.addEventListener('click', () => {
+  document.querySelectorAll('.tip.active').forEach(t => t.classList.remove('active'));
+});
+</script>
+
+</body>
+</html>
