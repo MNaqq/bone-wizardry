@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>L5 Trainer — Bone Wizardry</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'JetBrains Mono', monospace;
+    background: linear-gradient(180deg, #020617 0%, #0f172a 100%);
+    color: #e2e8f0;
+    min-height: 100vh;
+    padding: 2rem 1rem;
+    line-height: 1.6;
+  }
+  a { text-decoration: none; }
+
+  /* Nav */
+  .nav { display: flex; justify-content: center; gap: 0.75rem; margin-bottom: 2rem; flex-wrap: wrap; }
+  .nav-link {
+    padding: 0.5rem 1rem; border-radius: 0.75rem; font-size: 0.75rem; font-weight: 700;
+    border: 2px solid #334155; color: #94a3b8; transition: all 0.3s; cursor: pointer;
+    font-family: inherit;
+  }
+  .nav-link:hover { border-color: #8b5cf6; color: #8b5cf6; background: #8b5cf610; }
+  .nav-link.active { border-color: #8b5cf6; color: #8b5cf6; background: #8b5cf610; }
+
+  .header { text-align: center; margin-bottom: 2rem; }
+  .header-sub { color: #64748b; font-size: 0.7rem; letter-spacing: 0.4em; text-transform: uppercase; margin-bottom: 0.5rem; }
+  .header h1 {
+    font-size: 1.8rem; font-weight: 900;
+    background: linear-gradient(135deg, #a855f7, #ec4899, #f59e0b);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .header-desc { color: #64748b; font-size: 0.75rem; margin-top: 0.5rem; max-width: 36rem; margin-left: auto; margin-right: auto; }
+
+  /* Scene container */
+  .scene {
+    max-width: 48rem; margin: 0 auto; border: 2px solid #a855f7; border-radius: 1rem;
+    padding: 0; background: #0f172a; position: relative; overflow: hidden;
+  }
+  .scene::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, #a855f7, #ec4899, #f59e0b);
+  }
+  .scene-inner { padding: 1.5rem 1.5rem 1.25rem; }
+
+  .scene-label {
+    font-size: 0.6rem; color: #a855f7; text-transform: uppercase;
+    letter-spacing: 0.2em; font-weight: 700; margin-bottom: 1rem;
+  }
+
+  /* Narrator - Inscryption boardgame-master style */
+  .narrator {
+    font-size: 0.8rem; color: #94a3b8; font-style: italic;
+    margin: 0.75rem 0; padding-left: 0.75rem;
+    border-left: 2px solid #334155;
+  }
+
+  /* Dialogue */
+  .dialogue { margin: 0.6rem 0; font-size: 0.8rem; }
+  .speaker { font-weight: 800; margin-right: 0.4rem; }
+  .speaker-attending { color: #c4b5fd; }
+  .speaker-student { color: #fca5a5; }
+  .line { color: #e2e8f0; }
+  .thought { color: #64748b; font-style: italic; font-size: 0.75rem; display: block; margin-top: 0.2rem; }
+
+  /* Findings card */
+  .findings-card {
+    margin: 1rem 0; padding: 0.85rem 1rem; border-radius: 0.75rem;
+    background: #1e293b; border: 1px solid #334155;
+  }
+  .findings-title {
+    font-size: 0.65rem; color: #f59e0b; text-transform: uppercase;
+    letter-spacing: 0.15em; font-weight: 700; margin-bottom: 0.5rem;
+  }
+  .findings-card ul { list-style: none; padding: 0; }
+  .findings-card li {
+    font-size: 0.8rem; padding: 0.2rem 0; color: #cbd5e1;
+  }
+  .findings-card li::before { content: '\25B8 '; color: #a855f7; }
+  .hl-red { color: #fca5a5; font-weight: 700; }
+  .hl-orange { color: #fdba74; font-weight: 700; }
+  .hl-pink { color: #f9a8d4; font-weight: 700; }
+  .hl-green { color: #86efac; font-weight: 700; }
+  .hl-cyan { color: #67e8f9; font-weight: 700; }
+  .hl-purple { color: #c4b5fd; font-weight: 700; }
+  .hl-yellow { color: #fde047; font-weight: 700; }
+
+  /* Diagnosis chain */
+  .dx-chain {
+    margin: 0.75rem 0 1rem; padding: 0.85rem 1rem; border-radius: 0.75rem;
+    background: #0a0f1e; border: 1px solid #1e293b;
+  }
+  .dx-chain-title {
+    font-size: 0.6rem; color: #475569; text-transform: uppercase;
+    letter-spacing: 0.15em; font-weight: 700; margin-bottom: 0.6rem;
+  }
+  .dx-step-row {
+    display: flex; align-items: flex-start; gap: 0.6rem;
+    padding: 0.35rem 0; border-bottom: 1px solid #1e293b18;
+  }
+  .dx-step-row:last-child { border-bottom: none; }
+  .dx-step-badge {
+    width: 1.4rem; height: 1.4rem; border-radius: 50%; display: flex;
+    align-items: center; justify-content: center; font-size: 0.65rem;
+    font-weight: 800; flex-shrink: 0; margin-top: 0.1rem;
+  }
+  .dx-step-text { font-size: 0.75rem; line-height: 1.5; flex: 1; flex-wrap: wrap; }
+  .dx-finding { color: #94a3b8; }
+  .dx-arrow { color: #475569; margin: 0 0.25rem; }
+  .dx-means { color: #64748b; font-style: italic; }
+  .dx-result { font-weight: 700; }
+
+  /* Interactive choices */
+  .choice-label {
+    font-size: 0.7rem; color: #fde047; font-weight: 700;
+    margin: 1rem 0 0.5rem; text-transform: uppercase; letter-spacing: 0.1em;
+  }
+  .choices { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 0.75rem; }
+  .choice-btn {
+    padding: 0.65rem 0.85rem; border-radius: 0.5rem;
+    border: 2px solid #334155; background: #0f172a;
+    color: #cbd5e1; cursor: pointer; font-size: 0.8rem;
+    transition: all 0.3s; font-family: inherit; text-align: left;
+  }
+  .choice-btn:hover { border-color: #a855f7; color: #c4b5fd; }
+  .choice-btn.correct { border-color: #22c55e; color: #86efac; background: #22c55e08; }
+  .choice-btn.wrong { border-color: #ef4444; color: #fca5a5; background: #ef444408; }
+  .choice-btn:disabled { cursor: default; opacity: 0.85; }
+  .choice-btn:disabled:hover { border-color: inherit; color: inherit; }
+
+  /* Response boxes */
+  .response {
+    margin-top: 0.75rem; padding: 0.75rem; border-radius: 0.5rem;
+    display: none; font-size: 0.8rem;
+  }
+  .response.show { display: block; }
+  .response.good { background: #22c55e10; border-left: 3px solid #22c55e; color: #86efac; }
+  .response.bad { background: #ef444410; border-left: 3px solid #ef4444; color: #fca5a5; }
+
+  /* Continue button */
+  .continue-btn {
+    display: none; margin-top: 0.75rem; padding: 0.5rem 1.25rem;
+    border-radius: 0.5rem; border: 2px solid #a855f7;
+    background: #a855f710; color: #c4b5fd; cursor: pointer;
+    font-family: inherit; font-weight: 700; font-size: 0.8rem; transition: all 0.3s;
+  }
+  .continue-btn:hover { background: #a855f720; }
+  .continue-btn.show { display: inline-block; }
+
+  /* Phases */
+  .phase { display: none; }
+  .phase.active { display: block; }
+
+  /* Separator */
+  .scene-divider {
+    height: 1px; background: linear-gradient(90deg, transparent, #334155, transparent);
+    margin: 1rem 0;
+  }
+
+  /* Key fact */
+  .key-fact {
+    padding: 0.75rem 1rem; border-radius: 0.75rem; margin: 0.75rem 0;
+    font-size: 0.8rem;
+  }
+
+  /* Breakdown table */
+  .breakdown-table { width: 100%; border-collapse: collapse; margin: 0.75rem 0; font-size: 0.75rem; }
+  .breakdown-table th {
+    background: #1e293b; color: #94a3b8; padding: 0.5rem;
+    text-align: left; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em;
+  }
+  .breakdown-table td { padding: 0.5rem; border-bottom: 1px solid #1e293b; color: #cbd5e1; }
+  .breakdown-table tr:last-child td { border-bottom: none; }
+
+  .footer { text-align: center; color: #334155; font-size: 0.7rem; margin-top: 2.5rem; letter-spacing: 0.1em; }
+
+  /* Restart */
+  .restart-btn {
+    display: none; margin-top: 1rem; padding: 0.5rem 1.25rem;
+    border-radius: 0.5rem; border: 2px solid #ec4899;
+    background: #ec489910; color: #f9a8d4; cursor: pointer;
+    font-family: inherit; font-weight: 700; font-size: 0.75rem; transition: all 0.3s;
+  }
+  .restart-btn:hover { background: #ec489920; }
+
+  @media (max-width: 640px) {
+    .scene-inner { padding: 1rem; }
+    .header h1 { font-size: 1.4rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <a href="/" class="nav-link">Home</a>
+  <a href="../index.html" class="nav-link">OMM Portal</a>
+  <a href="index.html" class="nav-link">Sacral Torsion</a>
+  <a href="#" class="nav-link active">L5 Trainer</a>
+</div>
+
+<div class="header">
+  <p class="header-sub">Bone Wizardry — OMM / OPP</p>
+  <h1>The L5 Question</h1>
+  <p class="header-desc">You got the torsion right. But do you actually understand what L5 is doing?</p>
+</div>
+
+<div class="scene">
+  <div class="scene-inner">
+
+    <!-- ===== PHASE 1: Scene Setup ===== -->
+    <div class="phase active" id="phase1">
+      <div class="scene-label">Scene I &mdash; The Attending's Office</div>
+
+      <div class="narrator">
+        The fluorescent lights buzz overhead. The kind of lights that make everyone look
+        a little more dead inside than they already are. A third-year medical student
+        stands in the doorway, clutching a patient chart like a life raft.
+      </div>
+
+      <div class="narrator">
+        You are the attending. You have coffee. You have patience. You will need both.
+      </div>
+
+      <div class="dialogue">
+        <span class="speaker speaker-student">Student:</span>
+        <span class="line">"I... I diagnosed the patient. Left-on-left sacral torsion."</span>
+        <span class="thought">(They say this like they've just defused a bomb. Their hands are shaking.)</span>
+      </div>
+
+      <div class="dialogue">
+        <span class="speaker speaker-attending">You:</span>
+        <span class="line">"Okay. Walk me through how you got there."</span>
+      </div>
+
+      <div class="dialogue">
+        <span class="speaker speaker-student">Student:</span>
+        <span class="line">"The patient's physical exam showed..."</span>
+      </div>
+
+      <div class="findings-card">
+        <div class="findings-title">Patient Physical Findings</div>
+        <ul>
+          <li>Positive seated flexion test on the <span class="hl-pink">LEFT</span></li>
+          <li>Deep sacral sulcus on the <span class="hl-red">LEFT</span></li>
+          <li>Posterior/inferior ILA on the <span class="hl-orange">RIGHT</span></li>
+          <li>Lumbosacral spring test: <span class="hl-green">sacrum springs freely (negative)</span></li>
+        </ul>
+      </div>
+
+      <div class="dx-chain">
+        <div class="dx-chain-title">How the student read it</div>
+        <div class="dx-step-row">
+          <div class="dx-step-badge" style="background:#ef444422;color:#fca5a5;">1</div>
+          <div class="dx-step-text">
+            <span class="dx-finding">Deep sulcus on LEFT</span>
+            <span class="dx-arrow">&rarr;</span>
+            <span class="dx-means">sacral base moved anterior on LEFT</span>
+            <span class="dx-arrow">&rarr;</span>
+            <span class="dx-result hl-red">rotation = LEFT</span>
+          </div>
+        </div>
+        <div class="dx-step-row">
+          <div class="dx-step-badge" style="background:#ec489922;color:#f9a8d4;">2</div>
+          <div class="dx-step-text">
+            <span class="dx-finding">Seated flexion positive on LEFT</span>
+            <span class="dx-arrow">&rarr;</span>
+            <span class="dx-means">SI joint restricted on left = left oblique axis engaged</span>
+            <span class="dx-arrow">&rarr;</span>
+            <span class="dx-result hl-pink">axis = LEFT</span>
+          </div>
+        </div>
+        <div class="dx-step-row">
+          <div class="dx-step-badge" style="background:#a855f722;color:#c4b5fd;">3</div>
+          <div class="dx-step-text">
+            <span class="dx-finding">Rotation LEFT on LEFT oblique axis</span>
+            <span class="dx-arrow">&rarr;</span>
+            <span class="dx-result hl-purple">named: <strong>Left on Left</strong></span>
+            <span class="dx-means">&nbsp;(same sides = forward torsion)</span>
+          </div>
+        </div>
+        <div class="dx-step-row">
+          <div class="dx-step-badge" style="background:#22c55e22;color:#86efac;">&#10003;</div>
+          <div class="dx-step-text">
+            <span class="dx-finding">Spring test negative (springs freely)</span>
+            <span class="dx-arrow">&rarr;</span>
+            <span class="dx-result hl-green">confirms forward torsion</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="dialogue">
+        <span class="speaker speaker-student">Student:</span>
+        <span class="line">"Left-on-left forward torsion."</span>
+        <span class="thought">(They look at you with the energy of a golden retriever who just brought you a stick.)</span>
+      </div>
+
+      <div class="dialogue">
+        <span class="speaker speaker-attending">You:</span>
+        <span class="line">"That's correct. Nice work."</span>
+      </div>
+
+      <div class="narrator">
+        A flicker of joy crosses the student's face. It will not last.
+      </div>
+
+      <div class="dialogue">
+        <span class="speaker speaker-attending">You:</span>
+        <span class="line">"So because of their sacrum, their back hurts?"</span>
+      </div>
+
+      <div class="dialogue">
+        <span class="speaker speaker-student">Student:</span>
+        <span class="line">"...yes?"</span>
+        <span class="thought">(The joy has left.)</span>
+      </div>
+
+      <div class="dialogue">
+        <span class="speaker speaker-attending">You:</span>
+        <span class="line">"Right. But is it <em>just</em> the sacrum that's affected? Is it just those areas that are the problem?"</span>
+      </div>
+
+      <div class="dialogue">
+        <span class="speaker speaker-student">Student:</span>
+        <span class="line">"...yes?"</span>
+        <span class="thought">(Their voice goes up at the end. They know this is wrong. They don't know why.)</span>
+      </div>
+
+      <div class="narrator">
+        You set down your coffee. This is the part they never teach well enough.
+        The sacrum doesn't rotate in isolation. Something else moves with it.
+        Something at L5.
+      </div>
+
+      <div class="scene-divider"></div>
+
+      <div class="choice-label">What do you ask the student next?</div>
+      <div class="choices">
+        <button class="choice-btn" onclick="answerPhase1(this, 'correct')">"What is L5 doing in a left-on-left torsion?"</button>
+        <button class="choice-btn" onclick="answerPhase1(this, 'okay')">"Can you tell me about Fryette's laws?"</button>
+        <button class="choice-btn" onclick="answerPhase1(this, 'wrong')">"What treatment would you use?"</button>
+      </div>
+      <div class="response" id="resp1"></div>
+      <button class="continue-btn" id="cont1" onclick="goPhase(2)">Continue &rarr;</button>
+    </div>
+
+    <!-- ===== PHASE 2: The L5 Question ===== -->
+    <div class="phase" id="phase2">
+      <div class="scene-label">Scene II &mdash; The Real Question</div>
+
+      <div class="dialogue">
+        <span class="speaker speaker-attending">You:</span>
+        <span class="line">"In a left-on-left sacral torsion, what is L5 doing?"</span>
+      </div>
+
+      <div class="dialogue">
+        <span class="speaker speaker-student">Student:</span>
+        <span class="line">"..."</span>
+        <span class="thought">(The student stares at you like you've asked them to calculate pi to the 50th digit.)</span>
+      </div>
+
+      <div class="narrator">
+        This is the question. The one that separates knowing the diagnosis from understanding it.
+        The sacrum rotates left. L5 sits right on top of it. It doesn't just... sit there.
+      </div>
+
+      <div class="choice-label">In a left-on-left forward torsion, L5 is rotated:</div>
+      <div class="choices">
+        <button class="choice-btn" onclick="answerPhase2(this, 'wrong-left')">"Left &mdash; same direction as the sacrum"</button>
+        <button class="choice-btn" onclick="answerPhase2(this, 'correct')">"Right &mdash; opposite to the sacrum"</button>
+        <button class="choice-btn" onclick="answerPhase2(this, 'wrong-none')">"L5 doesn't rotate, only the sacrum moves"</button>
+      </div>
+      <div class="response" id="resp2"></div>
+      <button class="continue-btn" id="cont2" onclick="goPhase(3)">Continue &rarr;</button>
+    </div>
+
+    <!-- ===== PHASE 3: Why? ===== -->
+    <div class="phase" id="phase3">
+      <div class="scene-label">Scene III &mdash; But Why?</div>
+
+      <div class="dialogue">
+        <span class="speaker speaker-attending">You:</span>
+        <span class="line">"L5 rotates to the RIGHT. Good. But <em>why?</em>"</span>
+      </div>
+
+      <div class="dialogue">
+        <span class="speaker speaker-student">Student:</span>
+        <span class="line">"Because... torsion?"</span>
+        <span class="thought">(Said with the confidence of someone guessing their own birthday.)</span>
+      </div>
+
+      <div class="narrator">
+        You lean forward. This is where it clicks &mdash; or where it doesn't.
+      </div>
+
+      <div class="choice-label">Why does L5 rotate opposite the sacrum in a forward torsion?</div>
+      <div class="choices">
+        <button class="choice-btn" onclick="answerPhase3(this, 'correct')">Forward torsion = physiologic motion = Fryette's Type I &mdash; sidebending and rotation go to OPPOSITE sides</button>
+        <button class="choice-btn" onclick="answerPhase3(this, 'wrong-type2')">Forward torsion = Fryette's Type II &mdash; sidebending and rotation go to the SAME side</button>
+        <button class="choice-btn" onclick="answerPhase3(this, 'wrong-compensate')">L5 just compensates randomly to keep balance</button>
+      </div>
+      <div class="response" id="resp3"></div>
+      <button class="continue-btn" id="cont3" onclick="goPhase(4)">Continue &rarr;</button>
+    </div>
+
+    <!-- ===== PHASE 4: The Full Picture ===== -->
+    <div class="phase" id="phase4">
+      <div class="scene-label">Scene IV &mdash; The Full Picture</div>
+
+      <div class="dialogue">
+        <span class="speaker speaker-attending">You:</span>
+        <span class="line">"So now you don't just have a sacral torsion. You have a sacral torsion AND an L5 somatic dysfunction. What does that open up?"</span>
+      </div>
+
+      <div class="dialogue">
+        <span class="speaker speaker-student">Student:</span>
+        <span class="line">"...more treatment options?"</span>
+        <span class="thought">(A spark of understanding. The golden retriever is learning a new trick.)</span>
+      </div>
+
+      <div class="dialogue">
+        <span class="speaker speaker-attending">You:</span>
+        <span class="line">"Exactly. You can treat the sacral torsion directly, or you can address L5. Sometimes you need both. And on the boards &mdash; they will absolutely test whether you know what L5 is doing."</span>
+      </div>
+
+      <div class="narrator">
+        The student writes something down. Then crosses it out. Then writes it again.
+        Progress.
+      </div>
+
+      <div class="scene-divider"></div>
+
+      <div class="key-fact" style="background: #a855f712; border: 1px solid #a855f733; color: #c4b5fd;">
+        <strong>The Rule:</strong> In a sacral torsion, L5 couples with the sacrum. The direction depends on whether it's forward or backward.
+      </div>
+
+      <table class="breakdown-table">
+        <tr>
+          <th>Torsion</th>
+          <th>Type</th>
+          <th>Fryette's Law</th>
+          <th>L5 Rotation</th>
+        </tr>
+        <tr>
+          <td><span class="hl-green">L on L</span></td>
+          <td>Forward</td>
+          <td>Type I (opposite)</td>
+          <td><span class="hl-cyan">Right</span></td>
+        </tr>
+        <tr>
+          <td><span class="hl-green">R on R</span></td>
+          <td>Forward</td>
+          <td>Type I (opposite)</td>
+          <td><span class="hl-cyan">Left</span></td>
+        </tr>
+        <tr>
+          <td><span class="hl-red">L on R</span></td>
+          <td>Backward</td>
+          <td>Type II (same)</td>
+          <td><span class="hl-orange">Left</span></td>
+        </tr>
+        <tr>
+          <td><span class="hl-red">R on L</span></td>
+          <td>Backward</td>
+          <td>Type II (same)</td>
+          <td><span class="hl-orange">Right</span></td>
+        </tr>
+      </table>
+
+      <div class="key-fact" style="background: #22c55e12; border: 1px solid #22c55e33; color: #86efac;">
+        <strong>Why it matters:</strong> Knowing L5's position (1) confirms your torsion diagnosis, (2) gives you additional treatment targets, and (3) is a favorite board question.
+      </div>
+
+      <div class="narrator">
+        The student looks up from their notes. Something has shifted behind their eyes.
+        Not confidence &mdash; not yet. But the beginning of it. The part where the pieces
+        start fitting together instead of floating around in the dark.
+      </div>
+
+      <div class="dialogue">
+        <span class="speaker speaker-student">Student:</span>
+        <span class="line">"So if someone asks me 'what is L5 doing in an R-on-L torsion,' it's rotated right? Because backward = Type II = same side?"</span>
+      </div>
+
+      <div class="dialogue">
+        <span class="speaker speaker-attending">You:</span>
+        <span class="line">"Now you're getting it."</span>
+      </div>
+
+      <div class="narrator">
+        You take a sip of coffee. It's cold now. Worth it.
+      </div>
+
+      <button class="restart-btn" id="restartBtn" style="display: inline-block;" onclick="restart()">Play Again &larr;</button>
+    </div>
+
+  </div>
+</div>
+
+<p class="footer">Bone Wizardry &mdash; L5 Trainer</p>
+
+<script>
+function disableAll(container) {
+  container.querySelectorAll('.choice-btn').forEach(b => { b.disabled = true; });
+}
+
+function answerPhase1(btn, type) {
+  const parent = btn.closest('.phase');
+  disableAll(parent);
+  const resp = document.getElementById('resp1');
+  const cont = document.getElementById('cont1');
+
+  if (type === 'correct') {
+    btn.classList.add('correct');
+    resp.className = 'response show good';
+    resp.innerHTML = '<strong>Good instinct.</strong> Jumping straight to L5 is exactly the right move. The student diagnosed the torsion — now they need to understand what it <em>means</em> for the rest of the lumbosacral spine.';
+  } else if (type === 'okay') {
+    btn.classList.add('correct');
+    resp.className = 'response show good';
+    resp.innerHTML = '<strong>Not bad.</strong> Fryette\'s laws are the foundation here, and you\'ll need them in a moment. But the sharper question is more specific — what is L5 actually doing? That\'s where the understanding gap lives.';
+  } else {
+    btn.classList.add('wrong');
+    resp.className = 'response show bad';
+    resp.innerHTML = '<strong>Hold on.</strong> Treatment before understanding is how mistakes get baked in. If the student doesn\'t understand what L5 is doing, they\'ll miss treatment targets. Diagnosis first. Understanding second. Treatment third.';
+  }
+  cont.classList.add('show');
+}
+
+function answerPhase2(btn, type) {
+  const parent = btn.closest('.phase');
+  disableAll(parent);
+  const resp = document.getElementById('resp2');
+  const cont = document.getElementById('cont2');
+
+  if (type === 'correct') {
+    btn.classList.add('correct');
+    resp.className = 'response show good';
+    resp.innerHTML = '<strong>Correct.</strong> In a left-on-left <em>forward</em> torsion, L5 rotates to the <strong>RIGHT</strong> — opposite to the sacral rotation. This follows <strong>Fryette\'s Type I</strong> mechanics: in neutral, sidebending and rotation go to opposite sides.';
+  } else if (type === 'wrong-left') {
+    btn.classList.add('wrong');
+    parent.querySelectorAll('.choice-btn')[1].classList.add('correct');
+    resp.className = 'response show bad';
+    resp.innerHTML = '<strong>That would be backward torsion.</strong> If L5 rotates the <em>same</em> direction as the sacrum, that\'s Fryette\'s Type II (same-side coupling) — which is what happens in <em>backward</em> torsions (like L-on-R). In a <strong>forward</strong> torsion, L5 goes the <strong>opposite</strong> way. L-on-L = L5 rotated RIGHT.';
+  } else {
+    btn.classList.add('wrong');
+    parent.querySelectorAll('.choice-btn')[1].classList.add('correct');
+    resp.className = 'response show bad';
+    resp.innerHTML = '<strong>L5 absolutely moves.</strong> It sits right on top of the sacrum. When the sacral base rotates underneath it, L5 couples with that motion. The <em>direction</em> it couples depends on whether the torsion is forward (Type I = opposite) or backward (Type II = same). It never just sits there.';
+  }
+  cont.classList.add('show');
+}
+
+function answerPhase3(btn, type) {
+  const parent = btn.closest('.phase');
+  disableAll(parent);
+  const resp = document.getElementById('resp3');
+  const cont = document.getElementById('cont3');
+
+  if (type === 'correct') {
+    btn.classList.add('correct');
+    resp.className = 'response show good';
+    resp.innerHTML = '<strong>Exactly.</strong> Forward torsion is <em>physiologic</em> — it happens during normal gait. The sacrum is in a relatively neutral position, so Fryette\'s <strong>Type I</strong> governs: sidebending and rotation occur to <strong>opposite</strong> sides. That\'s why L5 counter-rotates. In a backward torsion, the sacrum is locked in flexion or extension — <strong>Type II</strong> takes over, and L5 rotates the <strong>same</strong> way.';
+  } else if (type === 'wrong-type2') {
+    btn.classList.add('wrong');
+    parent.querySelectorAll('.choice-btn')[0].classList.add('correct');
+    resp.className = 'response show bad';
+    resp.innerHTML = '<strong>Switched.</strong> Type II is <em>same</em>-side coupling, which governs <strong>backward</strong> torsions (non-physiologic). Forward torsions are physiologic — the sacrum is in neutral, so <strong>Type I</strong> applies: opposite-side coupling. That\'s why L5 rotates the opposite direction in forward torsions.';
+  } else {
+    btn.classList.add('wrong');
+    parent.querySelectorAll('.choice-btn')[0].classList.add('correct');
+    resp.className = 'response show bad';
+    resp.innerHTML = '<strong>It\'s not random.</strong> The coupling is governed by Fryette\'s laws. Forward torsion = physiologic = neutral position = <strong>Type I</strong> = opposite-side coupling. Backward torsion = non-physiologic = flexed/extended = <strong>Type II</strong> = same-side coupling. There\'s a predictable rule for every torsion.';
+  }
+  cont.classList.add('show');
+}
+
+function goPhase(n) {
+  document.querySelectorAll('.phase').forEach(p => p.classList.remove('active'));
+  document.getElementById('phase' + n).classList.add('active');
+  window.scrollTo({ top: document.querySelector('.scene').offsetTop - 20, behavior: 'smooth' });
+}
+
+function restart() {
+  // Reset all phases
+  document.querySelectorAll('.phase').forEach(p => p.classList.remove('active'));
+  document.getElementById('phase1').classList.add('active');
+
+  // Reset all buttons
+  document.querySelectorAll('.choice-btn').forEach(b => {
+    b.disabled = false;
+    b.classList.remove('correct', 'wrong');
+  });
+
+  // Hide all responses and continue buttons
+  document.querySelectorAll('.response').forEach(r => { r.className = 'response'; });
+  document.querySelectorAll('.continue-btn').forEach(c => { c.classList.remove('show'); });
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+</body>
+</html>

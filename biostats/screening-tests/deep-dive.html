@@ -1,0 +1,1478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Biostats: Sensitivity, Specificity & Study Design — Bone Wizardry</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #020617; color: #cbd5e1; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; line-height: 1.7; padding: 1rem; max-width: 720px; margin: 0 auto; -webkit-font-smoothing: antialiased; }
+
+/* Nav */
+.nav { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.5rem; font-size: 0.65rem; color: #64748b; flex-wrap: wrap; }
+.nav a { color: #60a5fa; text-decoration: none; }
+.nav a:hover { text-decoration: underline; }
+.nav .sep { color: #334155; }
+
+h1 { font-size: 1.2rem; color: #f1f5f9; margin-bottom: 0.25rem; font-weight: 700; line-height: 1.3; }
+h2 { font-size: 1rem; color: #e2e8f0; margin: 2rem 0 0.75rem; font-weight: 700; border-bottom: 1px solid #1e293b; padding-bottom: 0.3rem; }
+h3 { font-size: 0.85rem; color: #cbd5e1; margin: 1.25rem 0 0.5rem; font-weight: 600; }
+p { margin-bottom: 0.75rem; }
+strong { color: #e2e8f0; }
+
+/* Tooltips */
+.tip { position: relative; text-decoration: underline dotted #60a5fa; cursor: help; color: #93c5fd; }
+.tip .tip-text { display:none; position:absolute; bottom:125%; left:50%; transform:translateX(-50%); background:#1e293b; color:#cbd5e1; padding:0.5rem 0.75rem; border-radius:0.5rem; font-size:0.65rem; width:max-content; max-width:260px; z-index:100; border:1px solid #334155; line-height:1.4; box-shadow: 0 4px 12px #0004; }
+.tip .tip-text::after { content:''; position:absolute; top:100%; left:50%; transform:translateX(-50%); border:6px solid transparent; border-top-color:#1e293b; }
+.tip.active .tip-text { display:block; }
+@media(max-width:600px){ .tip .tip-text { left:auto; right:0; transform:none; max-width:220px; } .tip .tip-text::after { left:auto; right:1rem; } }
+
+/* Memory hooks */
+.mem-hook { display:inline-block; cursor:pointer; font-size:0.7rem; vertical-align:super; margin-left:0.2rem; opacity:0.7; position: relative; }
+.mem-hook:hover { opacity:1; }
+.mem-hook .hook-text { display:none; position:absolute; bottom:125%; left:50%; transform:translateX(-50%); background:#1a1a2e; color:#fde047; padding:0.5rem 0.75rem; border-radius:0.5rem; font-size:0.7rem; width:max-content; max-width:280px; z-index:100; border:1px solid #fde04733; font-weight:600; white-space: normal; }
+.mem-hook.active .hook-text { display:block; }
+@media(max-width:600px){ .mem-hook .hook-text { left:auto; right:0; transform:none; max-width:220px; } }
+
+/* Highlights */
+.hl-yellow { color: #fde047; font-weight: 700; }
+.hl-red { color: #f87171; font-weight: 700; }
+.hl-green { color: #4ade80; font-weight: 700; }
+.hl-blue { color: #60a5fa; font-weight: 700; }
+
+/* Sensory styles for biostats */
+.sensory-sensitivity { color: #4ade80; text-shadow: 0 0 8px #4ade8044; font-weight: 600; }
+.sensory-specificity { color: #f472b6; text-shadow: 0 0 8px #f472b644; font-weight: 600; }
+.sensory-prevalence { color: #fbbf24; font-style: italic; text-decoration: wavy underline #fbbf2466; text-underline-offset: 3px; }
+.sensory-power { color: #a78bfa; font-weight: 800; letter-spacing: 0.05em; text-shadow: 0 0 6px #a78bfa44; }
+.sensory-error { color: #f87171; font-weight: 200; font-style: italic; letter-spacing: 0.08em; }
+
+/* Cards and boxes */
+.card { background: #0f172a; border: 1px solid #1e293b; border-radius: 0.75rem; padding: 1rem; margin: 0.75rem 0; }
+.card-warn { border-color: #92400e; background: #0f172a; }
+.card-warn::before { content: 'BOARD TRAP'; display: block; font-size: 0.6rem; color: #f59e0b; font-weight: 700; letter-spacing: 0.1em; margin-bottom: 0.35rem; }
+.card-info { border-color: #1e3a5f; }
+
+/* Challenge boxes */
+.challenge-box { background: #0c1222; border: 1px solid #1d4ed8; border-radius: 0.75rem; padding: 1rem; margin: 1rem 0; }
+.challenge-q { font-size: 0.85rem; color: #e2e8f0; margin-bottom: 0.75rem; font-weight: 500; }
+.challenge-options { display: flex; flex-direction: column; gap: 0.4rem; }
+.challenge-btn { background: #1e293b; border: 1px solid #334155; color: #cbd5e1; padding: 0.5rem 0.75rem; border-radius: 0.5rem; cursor: pointer; text-align: left; font-family: inherit; font-size: 0.75rem; transition: all 0.2s; }
+.challenge-btn:hover { border-color: #60a5fa; background: #1e3a5f; }
+.challenge-btn.correct { background: #064e3b; border-color: #059669; color: #a7f3d0; }
+.challenge-btn.wrong { background: #4c0519; border-color: #be123c; color: #fda4af; }
+.challenge-btn.disabled { pointer-events: none; opacity: 0.6; }
+.challenge-explain { display: none; margin-top: 0.5rem; padding: 0.5rem 0.75rem; background: #1e293b; border-radius: 0.5rem; font-size: 0.7rem; line-height: 1.5; }
+.challenge-explain.show { display: block; }
+
+/* 2x2 Table interactive — textbook layout */
+.two-by-two { margin: 1rem 0; overflow-x: auto; }
+.two-by-two table { width: 100%; border-collapse: collapse; }
+.two-by-two th, .two-by-two td { border: 1px solid #334155; padding: 0.4rem 0.35rem; text-align: center; font-size: 0.7rem; vertical-align: middle; }
+.two-by-two th { background: #1e293b; color: #e2e8f0; font-weight: 600; font-size: 0.65rem; }
+.two-by-two .corner { background: #0f172a; border-color: #1e293b; }
+.two-by-two .margin-cell { background: #111827; font-size: 0.6rem; color: #94a3b8; line-height: 1.4; }
+.two-by-two .margin-cell .margin-val { font-size: 0.85rem; font-weight: 700; display: block; margin-bottom: 0.15rem; }
+.two-by-two .margin-cell .margin-formula { font-size: 0.5rem; color: #475569; display: block; }
+.two-by-two .margin-cell .margin-label { font-size: 0.55rem; color: #64748b; display: block; margin-top: 0.15rem; }
+.two-by-two .data-cell { background: #0f172a; }
+.two-by-two .data-cell .cell-letter { font-size: 1rem; font-weight: 800; display: block; margin-bottom: 0.1rem; }
+.two-by-two .data-cell .cell-name { font-size: 0.5rem; display: block; margin-bottom: 0.25rem; }
+.two-by-two input { width: 55px; background: #020617; border: 1px solid #475569; color: #fde047; text-align: center; padding: 0.3rem; border-radius: 0.35rem; font-family: inherit; font-size: 0.8rem; font-weight: 700; }
+.two-by-two input:focus { outline: none; border-color: #60a5fa; box-shadow: 0 0 8px #60a5fa44; }
+.two-by-two .bottom-row th { background: #111827; font-weight: 400; }
+.calc-extras { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 0.75rem; }
+.calc-item { background: #0f172a; border: 1px solid #1e293b; border-radius: 0.5rem; padding: 0.5rem; }
+.calc-label { font-size: 0.6rem; color: #64748b; display: block; }
+.calc-value { font-size: 1rem; font-weight: 700; color: #60a5fa; }
+.calc-formula { font-size: 0.55rem; color: #475569; display: block; margin-top: 0.15rem; }
+
+/* Prevalence slider */
+.slider-container { margin: 1rem 0; }
+.slider-container input[type="range"] { width: 100%; accent-color: #fbbf24; }
+.slider-row { display: flex; justify-content: space-between; gap: 0.5rem; margin-top: 0.5rem; }
+.slider-stat { flex: 1; background: #0f172a; border: 1px solid #1e293b; border-radius: 0.5rem; padding: 0.5rem; text-align: center; }
+.slider-stat .val { font-size: 1.1rem; font-weight: 700; }
+.slider-stat .lbl { font-size: 0.55rem; color: #64748b; display: block; }
+
+/* Study type ladder */
+.study-ladder { display: flex; flex-direction: column; gap: 0; margin: 1rem 0; }
+.ladder-rung { display: flex; align-items: stretch; border: 1px solid #1e293b; border-bottom: none; overflow: hidden; }
+.ladder-rung:last-child { border-bottom: 1px solid #1e293b; }
+.ladder-level { width: 36px; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; font-weight: 700; color: #020617; flex-shrink: 0; }
+.ladder-content { flex: 1; padding: 0.5rem 0.65rem; background: #0f172a; }
+.ladder-name { font-weight: 700; font-size: 0.75rem; color: #e2e8f0; }
+.ladder-detail { font-size: 0.6rem; color: #94a3b8; margin-top: 0.15rem; }
+.ladder-measure { font-size: 0.6rem; color: #fbbf24; font-weight: 600; }
+
+/* Villain cards for bias */
+.villain-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin: 0.75rem 0; }
+@media(max-width: 500px) { .villain-grid { grid-template-columns: 1fr; } }
+.villain-card { background: #0f172a; border: 1px solid #1e293b; border-radius: 0.5rem; padding: 0.6rem; cursor: pointer; transition: all 0.2s; }
+.villain-card:hover { border-color: #475569; }
+.villain-card .v-name { font-weight: 700; color: #f87171; font-size: 0.75rem; }
+.villain-card .v-tagline { font-size: 0.6rem; color: #94a3b8; font-style: italic; margin-top: 0.15rem; }
+.villain-card .v-detail { display: none; font-size: 0.65rem; color: #cbd5e1; margin-top: 0.4rem; line-height: 1.5; }
+.villain-card.open .v-detail { display: block; }
+.villain-card.open { border-color: #f87171; }
+
+/* Elimination game */
+.elim-game { margin: 1rem 0; }
+.elim-scenario { background: #0c1222; border: 1px solid #1d4ed8; border-radius: 0.75rem; padding: 1rem; margin-bottom: 0.75rem; }
+.elim-cards { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.75rem 0; }
+.elim-card { background: #1e293b; border: 1px solid #334155; padding: 0.4rem 0.65rem; border-radius: 0.4rem; font-size: 0.7rem; font-weight: 600; color: #e2e8f0; transition: all 0.3s; }
+.elim-card.eliminated { opacity: 0.25; text-decoration: line-through; background: #1a0a0a; border-color: #7f1d1d; }
+.elim-card.winner { background: #064e3b; border-color: #059669; color: #a7f3d0; }
+.elim-clue-btn { background: #1e293b; border: 1px solid #60a5fa; color: #60a5fa; padding: 0.4rem 0.75rem; border-radius: 0.4rem; cursor: pointer; font-family: inherit; font-size: 0.7rem; transition: all 0.2s; }
+.elim-clue-btn:hover { background: #1e3a5f; }
+.elim-clue-btn:disabled { opacity: 0.4; cursor: default; }
+.elim-clue-text { font-size: 0.7rem; color: #94a3b8; margin-top: 0.4rem; min-height: 1.2rem; }
+
+/* Decision tree */
+.dt-node { background: #0f172a; border: 1px solid #1e293b; border-radius: 0.5rem; padding: 0.75rem; margin: 0.5rem 0 0.5rem 1rem; }
+.dt-node.dt-root { margin-left: 0; border-color: #334155; }
+.dt-question { font-weight: 600; font-size: 0.75rem; color: #e2e8f0; margin-bottom: 0.5rem; }
+.dt-options { display: flex; flex-direction: column; gap: 0.3rem; }
+.dt-opt-btn { background: #1e293b; border: 1px solid #334155; color: #cbd5e1; padding: 0.4rem 0.6rem; border-radius: 0.4rem; cursor: pointer; text-align: left; font-family: inherit; font-size: 0.7rem; transition: all 0.2s; }
+.dt-opt-btn:hover { border-color: #60a5fa; }
+.dt-opt-btn.selected { background: #1e3a5f; border-color: #3b82f6; color: #93c5fd; }
+.dt-result { display: none; margin-top: 0.5rem; font-size: 0.7rem; line-height: 1.5; padding: 0.4rem 0.6rem; background: #0c1222; border-radius: 0.4rem; }
+.dt-result.show { display: block; }
+
+/* Quiz */
+.quiz-section { margin: 1.5rem 0; }
+.quiz-card { background: #0f172a; border: 1px solid #1e293b; border-radius: 0.75rem; padding: 1rem; margin: 0.75rem 0; }
+.quiz-stem { font-size: 0.8rem; color: #e2e8f0; margin-bottom: 0.75rem; line-height: 1.6; }
+.quiz-options { display: flex; flex-direction: column; gap: 0.5rem; }
+.quiz-opt { background: #1e293b; border: 1px solid #334155; color: #cbd5e1; padding: 0.65rem 0.75rem; border-radius: 0.5rem; cursor: pointer; text-align: left; font-family: inherit; font-size: 0.72rem; transition: all 0.2s; line-height: 1.5; min-height: 44px; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+.quiz-opt:hover { border-color: #60a5fa; }
+.quiz-opt.q-correct { background: #064e3b; border-color: #059669; color: #a7f3d0; }
+.quiz-opt.q-wrong { background: #4c0519; border-color: #be123c; color: #fda4af; }
+.quiz-opt.q-disabled { pointer-events: none; }
+.quiz-opt.q-dimmed { opacity: 0.5; }
+.quiz-explain { display: none; margin-top: 0.5rem; padding: 0.5rem 0.75rem; background: #1e293b; border-radius: 0.5rem; font-size: 0.68rem; line-height: 1.6; }
+.quiz-explain.show { display: block; }
+.quiz-score { text-align: center; font-size: 0.85rem; color: #e2e8f0; margin-top: 1rem; padding: 0.75rem; background: #0f172a; border-radius: 0.5rem; display: none; }
+.quiz-score.show { display: block; }
+
+/* Confetti canvas */
+#confetti-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; }
+
+/* NNT visual */
+.nnt-visual { display: flex; flex-wrap: wrap; gap: 2px; margin: 0.5rem 0; max-width: 300px; }
+.nnt-person { width: 12px; height: 12px; border-radius: 2px; background: #334155; transition: background 0.3s; }
+.nnt-person.treated { background: #4ade80; }
+.nnt-person.harmed { background: #f87171; }
+
+/* Scroll progress */
+.progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, #60a5fa, #a78bfa); z-index: 1000; width: 0%; transition: width 0.1s; }
+
+/* Reference tables */
+.ref-table { width: 100%; border-collapse: collapse; margin: 0.75rem 0; font-size: 0.68rem; }
+.ref-table th { background: #1e293b; color: #e2e8f0; font-weight: 700; font-size: 0.6rem; letter-spacing: 0.03em; padding: 0.5rem 0.4rem; text-align: left; border: 1px solid #334155; white-space: nowrap; }
+.ref-table td { padding: 0.45rem 0.4rem; border: 1px solid #1e293b; line-height: 1.5; vertical-align: top; }
+.ref-table tr:nth-child(even) { background: #0f172a; }
+.ref-table tr:nth-child(odd) { background: #0a1018; }
+.ref-table .row-label { font-weight: 700; color: #e2e8f0; white-space: nowrap; }
+.ref-table .formula { color: #fde047; font-weight: 600; font-size: 0.62rem; }
+.ref-table .key-point { color: #4ade80; font-weight: 600; }
+.ref-table .danger { color: #f87171; font-weight: 600; }
+.ref-table-wrap { overflow-x: auto; margin: 0.75rem 0; border-radius: 0.5rem; border: 1px solid #1e293b; }
+.ref-table-wrap .ref-table { margin: 0; }
+
+/* Responsive */
+@media (max-width: 600px) {
+  body { padding: 0.75rem; font-size: 0.75rem; }
+  h1 { font-size: 1rem; }
+  h2 { font-size: 0.9rem; }
+  .calc-results { grid-template-columns: 1fr; }
+  .two-by-two input { width: 50px; font-size: 0.75rem; }
+  .ref-table { font-size: 0.6rem; }
+  .ref-table th, .ref-table td { padding: 0.35rem 0.3rem; }
+}
+</style>
+</head>
+<body>
+
+<div class="progress-bar" id="progressBar"></div>
+<canvas id="confetti-canvas"></canvas>
+
+<!-- Nav -->
+<nav class="nav">
+  <a href="/index.html">Home</a>
+  <span class="sep">/</span>
+  <a href="/biostats/index.html">Biostats</a>
+  <span class="sep">/</span>
+  <span>Sensitivity, Specificity & Study Design</span>
+</nav>
+
+<!-- OPENER: Challenge first, not text -->
+<div class="challenge-box" id="opener-challenge">
+  <div class="challenge-q">A screening test has <span class="sensory-sensitivity">95% sensitivity</span>. A patient tests negative. Can you rule out the disease?</div>
+  <div class="challenge-options">
+    <button class="challenge-btn" onclick="openerAnswer(this, true)">Yes — high sensitivity means a negative result rules it out</button>
+    <button class="challenge-btn" onclick="openerAnswer(this, false)">No — you can never fully rule out disease with any test</button>
+    <button class="challenge-btn" onclick="openerAnswer(this, false)">Only if specificity is also high</button>
+  </div>
+  <div class="challenge-explain" id="opener-explain"></div>
+</div>
+
+<h1>Biostats: Sensitivity, Specificity & Study Design</h1>
+<p style="color:#64748b; font-size:0.7rem; margin-top:-0.25rem;">Everything derives from four cells. Learn the 2x2 table and the rest falls out.</p>
+
+<!-- ==================== 2x2 TABLE ==================== -->
+<h2>The 2x2 Table</h2>
+<p>This is the foundation. Every screening metric — sensitivity, specificity, PPV, NPV — is just a ratio of cells in this table. Change the numbers and watch everything update.</p>
+
+<div class="two-by-two">
+  <table>
+    <!-- Header row: empty corner, Disease +/-, Predictive Value label -->
+    <tr>
+      <th class="corner" rowspan="2" colspan="2"></th>
+      <th colspan="2" style="color:#e2e8f0; font-size:0.7rem; letter-spacing:0.05em;">Disease</th>
+      <th class="corner" rowspan="2" style="color:#fbbf24; font-size:0.6rem;">Predictive<br>Value</th>
+      <th class="corner" rowspan="2"></th>
+    </tr>
+    <tr>
+      <th style="color:#4ade80; font-size:0.75rem;">&#8853;</th>
+      <th style="color:#f87171; font-size:0.75rem;">&#8854;</th>
+    </tr>
+
+    <!-- Test + row -->
+    <tr>
+      <th rowspan="2" style="color:#60a5fa; font-size:0.6rem; writing-mode:vertical-lr; transform:rotate(180deg); letter-spacing:0.05em; padding:0.3rem;">Test</th>
+      <th style="color:#60a5fa; font-size:0.75rem;">&#8853;</th>
+      <td class="data-cell">
+        <span class="cell-letter" style="color:#e2e8f0;">A</span>
+        <span class="cell-name" style="color:#4ade80;">True Positive (TP)</span>
+        <input type="number" id="tp" value="90" min="0" oninput="calc2x2()">
+      </td>
+      <td class="data-cell">
+        <span class="cell-letter" style="color:#e2e8f0;">B</span>
+        <span class="cell-name" style="color:#f87171;">False Positive (FP)</span>
+        <input type="number" id="fp" value="80" min="0" oninput="calc2x2()">
+      </td>
+      <td class="margin-cell">
+        <span class="margin-label" style="color:#fbbf24;">PPV</span>
+        <span class="margin-val" id="calcPPV" style="color:#fbbf24;">—</span>
+        <span class="margin-formula">TP / (TP+FP) = A / (A+B)</span>
+      </td>
+      <td class="margin-cell">
+        <span class="margin-label" style="color:#64748b;">Total Positive Results</span>
+        <span class="margin-val" id="calcTotPos" style="color:#94a3b8;">—</span>
+        <span class="margin-formula">(A + B)</span>
+      </td>
+    </tr>
+
+    <!-- Test − row -->
+    <tr>
+      <th style="color:#60a5fa; font-size:0.75rem;">&#8854;</th>
+      <td class="data-cell">
+        <span class="cell-letter" style="color:#e2e8f0;">C</span>
+        <span class="cell-name" style="color:#f87171;">False Negative (FN)</span>
+        <input type="number" id="fn" value="10" min="0" oninput="calc2x2()">
+      </td>
+      <td class="data-cell">
+        <span class="cell-letter" style="color:#e2e8f0;">D</span>
+        <span class="cell-name" style="color:#4ade80;">True Negative (TN)</span>
+        <input type="number" id="tn" value="820" min="0" oninput="calc2x2()">
+      </td>
+      <td class="margin-cell">
+        <span class="margin-label" style="color:#60a5fa;">NPV</span>
+        <span class="margin-val" id="calcNPV" style="color:#60a5fa;">—</span>
+        <span class="margin-formula">TN / (FN+TN) = D / (C+D)</span>
+      </td>
+      <td class="margin-cell">
+        <span class="margin-label" style="color:#64748b;">Total Negative Results</span>
+        <span class="margin-val" id="calcTotNeg" style="color:#94a3b8;">—</span>
+        <span class="margin-formula">(C + D)</span>
+      </td>
+    </tr>
+
+    <!-- Sensitivity & Specificity bottom row -->
+    <tr class="bottom-row">
+      <th colspan="2" style="color:#94a3b8; font-size:0.55rem; background:#111827;">Sensitivity &<br>Specificity</th>
+      <td class="margin-cell">
+        <span class="margin-label" style="color:#4ade80;">Sensitivity</span>
+        <span class="margin-val" id="calcSens" style="color:#4ade80;">—</span>
+        <span class="margin-formula">TP / (TP+FN) = A / (A+C)</span>
+      </td>
+      <td class="margin-cell">
+        <span class="margin-label" style="color:#f472b6;">Specificity</span>
+        <span class="margin-val" id="calcSpec" style="color:#f472b6;">—</span>
+        <span class="margin-formula">TN / (FP+TN) = D / (B+D)</span>
+      </td>
+      <td class="corner" colspan="2"></td>
+    </tr>
+
+    <!-- Column totals row -->
+    <tr class="bottom-row">
+      <th colspan="2" style="background:#111827;"></th>
+      <td class="margin-cell">
+        <span class="margin-label">All Diseased</span>
+        <span class="margin-val" id="calcTotDis" style="color:#94a3b8;">—</span>
+        <span class="margin-formula">(A + C)</span>
+      </td>
+      <td class="margin-cell">
+        <span class="margin-label">All Non-Diseased</span>
+        <span class="margin-val" id="calcTotNonDis" style="color:#94a3b8;">—</span>
+        <span class="margin-formula">(B + D)</span>
+      </td>
+      <td class="corner" colspan="2"></td>
+    </tr>
+  </table>
+
+  <div class="calc-extras">
+    <div class="calc-item">
+      <span class="calc-label">Prevalence</span>
+      <span class="calc-value" id="calcPrev" style="color:#94a3b8;">—</span>
+      <span class="calc-formula">(TP + FN) / Total</span>
+    </div>
+    <div class="calc-item">
+      <span class="calc-label">Accuracy</span>
+      <span class="calc-value" id="calcAcc" style="color:#94a3b8;">—</span>
+      <span class="calc-formula">(TP + TN) / Total</span>
+    </div>
+  </div>
+</div>
+
+<p style="font-size:0.7rem; color:#64748b;">Try this: set TP=90, FP=80, FN=10, TN=820. Sensitivity is 90% but PPV is only 53%. That's the prevalence trap in action — when disease is rare, even good tests generate tons of false positives.</p>
+
+<!-- ==================== MASTER COMPARISON TABLE ==================== -->
+<h2>The Cheat Sheet — All 4 Metrics at a Glance</h2>
+<p style="font-size:0.7rem; color:#94a3b8;">Stare at this table before doing the quiz. Every question below tests one of these rows.</p>
+
+<div class="ref-table-wrap">
+<table class="ref-table">
+  <tr>
+    <th>Metric</th>
+    <th>Formula</th>
+    <th>What It Answers</th>
+    <th>Prevalence Changes It?</th>
+    <th>Board Rule</th>
+  </tr>
+  <tr>
+    <td class="row-label" style="color:#4ade80;">Sensitivity</td>
+    <td class="formula">TP / (TP + FN)</td>
+    <td>Of everyone <strong>sick</strong>, how many did the test catch?</td>
+    <td class="key-point">NO — fixed property of the test</td>
+    <td><strong>SnNOut</strong> — high sens + negative result = rules OUT disease</td>
+  </tr>
+  <tr>
+    <td class="row-label" style="color:#f472b6;">Specificity</td>
+    <td class="formula">TN / (TN + FP)</td>
+    <td>Of everyone <strong>healthy</strong>, how many did the test clear correctly?</td>
+    <td class="key-point">NO — fixed property of the test</td>
+    <td><strong>SpPIn</strong> — high spec + positive result = rules IN disease</td>
+  </tr>
+  <tr>
+    <td class="row-label" style="color:#fbbf24;">PPV</td>
+    <td class="formula">TP / (TP + FP)</td>
+    <td>If test is <strong>positive</strong>, what's the chance they're actually sick?</td>
+    <td class="danger">YES — prevalence UP = PPV UP</td>
+    <td>Low prevalence → tons of false positives → low PPV even with great test</td>
+  </tr>
+  <tr>
+    <td class="row-label" style="color:#60a5fa;">NPV</td>
+    <td class="formula">TN / (TN + FN)</td>
+    <td>If test is <strong>negative</strong>, what's the chance they're actually healthy?</td>
+    <td class="danger">YES — prevalence UP = NPV DOWN</td>
+    <td>High prevalence → more disease missed → NPV drops</td>
+  </tr>
+</table>
+</div>
+
+<div class="card" style="border-color:#334155; margin-top:0.5rem;">
+  <p style="font-size:0.72rem; margin-bottom:0.25rem;"><strong>The one-sentence version:</strong> Sensitivity and specificity describe the <em>test</em>. PPV and NPV describe the <em>patient's result</em>. The test doesn't change — but what the result <em>means</em> depends on who you're testing.</p>
+</div>
+
+<!-- ==================== SENSITIVITY VS SPECIFICITY ==================== -->
+<h2>Sensitivity vs Specificity</h2>
+
+<div class="card">
+  <p><span class="sensory-sensitivity">Sensitivity</span> = how good is the test at catching people who HAVE the disease?</p>
+  <p style="font-size:0.7rem; color:#94a3b8;">Formula: TP / (TP + FN). Think: "of everyone who's SICK, how many did the test catch?"</p>
+  <p>High sensitivity means few false negatives. If you test negative, you're probably clear.</p>
+</div>
+
+<div class="card">
+  <p><span class="sensory-specificity">Specificity</span> = how good is the test at correctly clearing people who DON'T have the disease?</p>
+  <p style="font-size:0.7rem; color:#94a3b8;">Formula: TN / (TN + FP). Think: "of everyone who's HEALTHY, how many did the test get right?"</p>
+  <p>High specificity means few false positives. If you test positive, it's probably real.</p>
+</div>
+
+<div class="card" style="border-color:#334155;">
+  <p><span class="hl-yellow">SnNOut</span> — <strong>S</strong>e<strong>n</strong>sitivity rules out. A highly <strong>sensitive</strong> test, when <strong>negative</strong>, rules <strong>out</strong> disease.
+    <span class="mem-hook" role="button" tabindex="0">&#x1F511;
+      <span class="hook-text">S-N-N-Out: <b>Sn</b>iff it out — a <b>sensitive</b> nose catches everything. If it smells <b>n</b>othing, <b>n</b>othing's there.</span>
+    </span>
+  </p>
+  <p><span class="hl-yellow">SpPIn</span> — <strong>S</strong><strong>p</strong>ecificity rules in. A highly <strong>specific</strong> test, when <strong>positive</strong>, rules <strong>in</strong> disease.
+    <span class="mem-hook" role="button" tabindex="0">&#x1F511;
+      <span class="hook-text">S-P-P-In: <b>Sp</b>ecific means picky. If a <b>p</b>icky test says yes, it's <b>in</b>. It doesn't say yes to just anyone.</span>
+    </span>
+  </p>
+</div>
+
+<div class="card card-warn">
+  <p>Boards LOVE this trap: "A screening test has 99% specificity. A patient tests positive. Does he have the disease?"</p>
+  <p>The answer depends on <span class="sensory-prevalence">prevalence</span>. Even 99% specificity gives tons of false positives in a low-prevalence population. <strong>SpPIn only works when pre-test probability isn't rock-bottom.</strong></p>
+</div>
+
+<!-- Clinical examples challenge -->
+<div class="challenge-box">
+  <div class="challenge-q">You want a screening test for a deadly cancer in the general population. Which do you prioritize?</div>
+  <div class="challenge-options">
+    <button class="challenge-btn" onclick="screenAnswer(this, true)">High sensitivity — you can't afford to miss cases</button>
+    <button class="challenge-btn" onclick="screenAnswer(this, false)">High specificity — you don't want false alarms</button>
+    <button class="challenge-btn" onclick="screenAnswer(this, false)">Both equally</button>
+  </div>
+  <div class="challenge-explain" id="screen-explain"></div>
+</div>
+
+<!-- ==================== PPV / NPV + PREVALENCE SLIDER ==================== -->
+<h2>PPV, NPV & the Prevalence Trap</h2>
+
+<p><strong>PPV</strong> (Positive Predictive Value) = if the test is positive, what's the chance the patient actually has the disease?</p>
+<p><strong>NPV</strong> (Negative Predictive Value) = if the test is negative, what's the chance the patient is actually healthy?</p>
+
+<p>Here's the key: <strong>sensitivity and specificity are fixed properties of the test</strong>. They don't change with prevalence. But <strong>PPV and NPV change dramatically with prevalence</strong>.</p>
+
+<div class="card card-info">
+  <h3 style="margin-top:0;">Prevalence Slider</h3>
+  <p style="font-size:0.7rem;">Watch what happens to PPV as prevalence drops. Test sensitivity = 95%, specificity = 95%, population = 10,000.</p>
+
+  <div class="slider-container">
+    <label style="font-size:0.7rem;">Prevalence: <strong id="prevLabel">10%</strong></label>
+    <input type="range" id="prevSlider" min="1" max="50" value="10" oninput="updatePrevalence()">
+
+    <div class="slider-row">
+      <div class="slider-stat">
+        <span class="val" id="sliderPPV" style="color:#fbbf24;">—</span>
+        <span class="lbl">PPV</span>
+      </div>
+      <div class="slider-stat">
+        <span class="val" id="sliderNPV" style="color:#60a5fa;">—</span>
+        <span class="lbl">NPV</span>
+      </div>
+      <div class="slider-stat">
+        <span class="val" id="sliderFP" style="color:#f87171;">—</span>
+        <span class="lbl">False Positives</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p style="font-size:0.7rem; color:#64748b;">At 1% prevalence with 95%/95% test: PPV drops to ~16%. That means 84% of positives are false. This is why you don't screen everyone for rare diseases.</p>
+
+<div class="card card-warn">
+  <p><strong>Prevalence up</strong> = PPV up, NPV down.</p>
+  <p><strong>Prevalence down</strong> = PPV down, NPV up.</p>
+  <p>Think: if everyone has the disease, a positive test is almost certainly right (high PPV). If nobody has it, a positive test is probably wrong (low PPV).</p>
+</div>
+
+<!-- ==================== STUDY TYPES ==================== -->
+<h2>Study Types — The Evidence Ladder</h2>
+
+<p>Higher rung = stronger evidence. But each type has its own measure of association and its own weaknesses.</p>
+
+<div class="study-ladder">
+  <div class="ladder-rung">
+    <div class="ladder-level" style="background: #4ade80;">1</div>
+    <div class="ladder-content">
+      <div class="ladder-name">Meta-Analysis / Systematic Review</div>
+      <div class="ladder-detail">Pools data from multiple studies. The gold standard of evidence.</div>
+      <div class="ladder-measure">Measure: pooled effect size (OR, RR, etc.)</div>
+    </div>
+  </div>
+  <div class="ladder-rung">
+    <div class="ladder-level" style="background: #22d3ee;">2</div>
+    <div class="ladder-content">
+      <div class="ladder-name">Randomized Controlled Trial (RCT)</div>
+      <div class="ladder-detail">Random assignment to treatment vs control. Gold standard for individual studies. <strong>Can establish causation.</strong></div>
+      <div class="ladder-measure">Measure: <span class="tip">Relative Risk (RR)<span class="tip-text">RR = risk in exposed / risk in unexposed. RR=2 means twice the risk. Only valid when you can measure true incidence (prospective studies).</span></span></div>
+    </div>
+  </div>
+  <div class="ladder-rung">
+    <div class="ladder-level" style="background: #60a5fa;">3</div>
+    <div class="ladder-content">
+      <div class="ladder-name">Cohort Study</div>
+      <div class="ladder-detail">Follow exposed vs unexposed groups forward in time (prospective) or look back (retrospective). Can show association + temporality.</div>
+      <div class="ladder-measure">Measure: <span class="tip">Relative Risk (RR)<span class="tip-text">Cohort studies track incidence over time, so you can calculate true risk ratios. Prospective = strongest. Retrospective cohort still uses RR because you're following groups forward through records.</span></span></div>
+    </div>
+  </div>
+  <div class="ladder-rung">
+    <div class="ladder-level" style="background: #a78bfa;">4</div>
+    <div class="ladder-content">
+      <div class="ladder-name">Case-Control Study</div>
+      <div class="ladder-detail">Start with disease (cases) and no disease (controls), look BACKWARD for exposures. Good for rare diseases.</div>
+      <div class="ladder-measure">Measure: <span class="tip">Odds Ratio (OR)<span class="tip-text">OR = (a*d)/(b*c) from the 2x2 table. You CAN'T use RR because you selected on outcome, not exposure — you don't know true incidence. OR approximates RR when disease is rare.</span></span></div>
+    </div>
+  </div>
+  <div class="ladder-rung">
+    <div class="ladder-level" style="background: #f472b6;">5</div>
+    <div class="ladder-content">
+      <div class="ladder-name">Cross-Sectional Study</div>
+      <div class="ladder-detail">Snapshot in time. Measures exposure AND disease simultaneously. Good for prevalence, bad for causation.</div>
+      <div class="ladder-measure">Measure: <span class="tip">Prevalence, OR<span class="tip-text">Since exposure and outcome are measured at the same time, you can't establish which came first. Gives you prevalence (how common) and can calculate an OR, but cannot prove causation.</span></span></div>
+    </div>
+  </div>
+  <div class="ladder-rung">
+    <div class="ladder-level" style="background: #f87171;">6</div>
+    <div class="ladder-content">
+      <div class="ladder-name">Case Series / Case Report</div>
+      <div class="ladder-detail">Description of individual cases. No comparison group. Lowest evidence but can identify new conditions.</div>
+      <div class="ladder-measure">Measure: descriptive only — no statistical comparison</div>
+    </div>
+  </div>
+</div>
+
+<div class="card card-warn">
+  <p><strong>RR vs OR:</strong> If you can follow people forward and count who gets sick = <strong>RR</strong> (RCT, cohort). If you start with sick people and look backward = <strong>OR</strong> (case-control). Boards ask this constantly. Case-control = OR. Always.</p>
+</div>
+
+<h3>Study Types — Side-by-Side Comparison</h3>
+<p style="font-size:0.7rem; color:#94a3b8;">This is the table that makes the elimination game easy. Learn the columns and you can ID any study in one read.</p>
+
+<div class="ref-table-wrap">
+<table class="ref-table">
+  <tr>
+    <th>Study Type</th>
+    <th>Direction</th>
+    <th>Starts With</th>
+    <th>Measure</th>
+    <th>Causation?</th>
+    <th>Best For</th>
+    <th>Key Weakness</th>
+  </tr>
+  <tr>
+    <td class="row-label">RCT</td>
+    <td>Forward</td>
+    <td>Random assignment to groups</td>
+    <td class="formula">RR</td>
+    <td class="key-point">YES</td>
+    <td>Testing treatments</td>
+    <td>Expensive, ethical limits</td>
+  </tr>
+  <tr>
+    <td class="row-label">Cohort</td>
+    <td>Forward (or retro)</td>
+    <td>Exposure status</td>
+    <td class="formula">RR</td>
+    <td>Association + temporality</td>
+    <td>Common exposures, incidence</td>
+    <td>Slow, expensive, attrition</td>
+  </tr>
+  <tr>
+    <td class="row-label">Case-Control</td>
+    <td class="danger">BACKWARD</td>
+    <td>Disease status</td>
+    <td class="formula">OR only</td>
+    <td>No</td>
+    <td class="key-point">Rare diseases</td>
+    <td>Recall bias, can't calc incidence</td>
+  </tr>
+  <tr>
+    <td class="row-label">Cross-Sectional</td>
+    <td>Snapshot (no direction)</td>
+    <td>Both at once</td>
+    <td class="formula">Prevalence, OR</td>
+    <td>No</td>
+    <td>Prevalence, hypothesis generating</td>
+    <td>No temporality at all</td>
+  </tr>
+  <tr>
+    <td class="row-label">Case Series</td>
+    <td>Descriptive</td>
+    <td>Interesting cases</td>
+    <td class="formula">None</td>
+    <td>No</td>
+    <td>New/rare conditions</td>
+    <td>No comparison group</td>
+  </tr>
+</table>
+</div>
+
+<!-- ==================== BIAS TYPES ==================== -->
+<h2>Bias Types — The Villain Gallery</h2>
+<p>Tap any villain to reveal their full description. These are the ways studies lie to you.</p>
+
+<div class="villain-grid">
+  <div class="villain-card" onclick="this.classList.toggle('open')">
+    <div class="v-name">Selection Bias</div>
+    <div class="v-tagline">"The sample was rigged from the start."</div>
+    <div class="v-detail">The study population isn't representative. Example: studying depression by recruiting at a hospital — you've already selected for sicker patients. <strong>Berkson bias</strong> is a specific type: using hospital patients makes it look like two diseases are associated just because both cause hospitalization.</div>
+  </div>
+  <div class="villain-card" onclick="this.classList.toggle('open')">
+    <div class="v-name">Recall Bias</div>
+    <div class="v-tagline">"Sick people remember more."</div>
+    <div class="v-detail">People with disease recall exposures more carefully than healthy controls. Classic in <strong>case-control studies</strong>. Example: mothers of babies with birth defects remember every medication they took. Healthy-baby mothers forget.</div>
+  </div>
+  <div class="villain-card" onclick="this.classList.toggle('open')">
+    <div class="v-name">Observer / Hawthorne</div>
+    <div class="v-tagline">"People act different when watched."</div>
+    <div class="v-detail"><strong>Observer bias:</strong> researcher sees what they expect (fix: blinding). <strong>Hawthorne effect:</strong> subjects change behavior because they know they're being observed, regardless of treatment group. Both inflate the treatment effect.</div>
+  </div>
+  <div class="villain-card" onclick="this.classList.toggle('open')">
+    <div class="v-name">Lead-Time Bias</div>
+    <div class="v-tagline">"Earlier detection looks like longer survival."</div>
+    <div class="v-detail">Screening catches disease earlier, so survival TIME from diagnosis appears longer — even if the patient dies at the same age. You didn't extend life; you just moved the starting line. Fix: measure mortality rate, not survival time.</div>
+  </div>
+  <div class="villain-card" onclick="this.classList.toggle('open')">
+    <div class="v-name">Length-Time Bias</div>
+    <div class="v-tagline">"Screening catches the slow ones."</div>
+    <div class="v-detail">Slow-growing tumors are present longer → more likely to be caught by screening. Aggressive tumors kill before the next screen. So screening populations look like they have better outcomes — but you're just selecting less aggressive disease.</div>
+  </div>
+  <div class="villain-card" onclick="this.classList.toggle('open')">
+    <div class="v-name">Confounding</div>
+    <div class="v-tagline">"A hidden third variable fooled everyone."</div>
+    <div class="v-detail">An unmeasured variable is associated with BOTH the exposure and the outcome. Example: coffee drinking seems to cause lung cancer — but coffee drinkers smoke more. Smoking is the confounder. Fix: <strong>randomization</strong> (best) or stratification/regression.</div>
+  </div>
+  <div class="villain-card" onclick="this.classList.toggle('open')">
+    <div class="v-name">Berkson Bias</div>
+    <div class="v-tagline">"Hospital patients aren't normal."</div>
+    <div class="v-detail">A type of selection bias specific to hospital-based studies. Two conditions appear correlated because both independently increase hospitalization probability. The association is an artifact of WHERE you sampled, not biology.</div>
+  </div>
+  <div class="villain-card" onclick="this.classList.toggle('open')">
+    <div class="v-name">Attrition Bias</div>
+    <div class="v-tagline">"The ones who left weren't random."</div>
+    <div class="v-detail">People drop out of studies for reasons related to the outcome. If sick patients in the treatment group quit due to side effects, the remaining treatment group looks healthier. Fix: <strong>intention-to-treat analysis</strong> — count everyone in their assigned group, even dropouts.</div>
+  </div>
+</div>
+
+<h3>Bias Quick-Reference</h3>
+<p style="font-size:0.7rem; color:#94a3b8;">The board question gives you a scenario. Match the pattern to the bias.</p>
+
+<div class="ref-table-wrap">
+<table class="ref-table">
+  <tr>
+    <th>Bias</th>
+    <th>The Pattern</th>
+    <th>Classic Study Type</th>
+    <th>The Fix</th>
+  </tr>
+  <tr>
+    <td class="row-label" style="color:#f87171;">Selection</td>
+    <td>Sample isn't representative of the population</td>
+    <td>Any</td>
+    <td>Randomization, representative sampling</td>
+  </tr>
+  <tr>
+    <td class="row-label" style="color:#f87171;">Recall</td>
+    <td>Sick people remember exposures better than healthy people</td>
+    <td class="danger">Case-control</td>
+    <td>Use medical records, not patient memory</td>
+  </tr>
+  <tr>
+    <td class="row-label" style="color:#f87171;">Observer</td>
+    <td>Researcher sees what they expect to see</td>
+    <td>Any unblinded</td>
+    <td class="key-point">Blinding</td>
+  </tr>
+  <tr>
+    <td class="row-label" style="color:#f87171;">Hawthorne</td>
+    <td>Subjects act different because they know they're watched</td>
+    <td>Any</td>
+    <td>Control group (both groups are watched)</td>
+  </tr>
+  <tr>
+    <td class="row-label" style="color:#f87171;">Lead-time</td>
+    <td>Earlier detection looks like longer survival (same death age)</td>
+    <td>Screening studies</td>
+    <td>Measure <strong>mortality rate</strong>, not survival time</td>
+  </tr>
+  <tr>
+    <td class="row-label" style="color:#f87171;">Length-time</td>
+    <td>Screening catches slow tumors more than aggressive ones</td>
+    <td>Screening studies</td>
+    <td>Account for tumor growth rates</td>
+  </tr>
+  <tr>
+    <td class="row-label" style="color:#f87171;">Berkson</td>
+    <td>Hospital patients make 2 diseases look correlated</td>
+    <td>Hospital-based case-control</td>
+    <td>Use community-based samples</td>
+  </tr>
+  <tr>
+    <td class="row-label" style="color:#f87171;">Confounding</td>
+    <td>Hidden 3rd variable linked to BOTH exposure and outcome</td>
+    <td>Any observational</td>
+    <td class="key-point">Randomization (best), stratification, regression</td>
+  </tr>
+  <tr>
+    <td class="row-label" style="color:#f87171;">Attrition</td>
+    <td>Dropouts aren't random — sicker people leave treatment group</td>
+    <td>RCT, cohort</td>
+    <td class="key-point">Intention-to-treat analysis</td>
+  </tr>
+</table>
+</div>
+
+<!-- ==================== NNT / NNH ==================== -->
+<h2>NNT, NNH & Risk Reduction</h2>
+
+<p><strong>ARR</strong> (Absolute Risk Reduction) = risk in control − risk in treatment. The raw difference.</p>
+<p><strong>RRR</strong> (Relative Risk Reduction) = ARR / risk in control. The percentage drop. <em>Sounds more impressive than it is.</em></p>
+<p><strong>NNT</strong> = 1 / ARR. The number of patients you need to treat for ONE to benefit.</p>
+<p><strong>NNH</strong> = 1 / (risk of harm in treatment − risk in control). Same idea, but for harm.</p>
+
+<div class="card card-info">
+  <h3 style="margin-top:0;">NNT Calculator</h3>
+  <p style="font-size:0.7rem;">Enter event rates to see NNT.</p>
+  <div style="display:flex; gap:0.75rem; flex-wrap:wrap; align-items:center;">
+    <label style="font-size:0.7rem;">Control event rate:
+      <input type="number" id="nntControl" value="20" min="0" max="100" style="width:50px; background:#020617; border:1px solid #475569; color:#fde047; padding:0.25rem; border-radius:0.3rem; font-family:inherit; font-size:0.75rem; text-align:center;" oninput="calcNNT()">%
+    </label>
+    <label style="font-size:0.7rem;">Treatment event rate:
+      <input type="number" id="nntTreat" value="15" min="0" max="100" style="width:50px; background:#020617; border:1px solid #475569; color:#fde047; padding:0.25rem; border-radius:0.3rem; font-family:inherit; font-size:0.75rem; text-align:center;" oninput="calcNNT()">%
+    </label>
+  </div>
+  <div style="margin-top:0.5rem; font-size:0.75rem;">
+    <span>ARR = <strong id="nntARR">—</strong></span> &nbsp;|&nbsp;
+    <span>RRR = <strong id="nntRRR">—</strong></span> &nbsp;|&nbsp;
+    <span>NNT = <strong id="nntNNT" style="color:#4ade80;">—</strong></span>
+  </div>
+  <div class="nnt-visual" id="nntVisual"></div>
+  <p style="font-size:0.6rem; color:#64748b; margin-top:0.3rem;" id="nntExplain"></p>
+</div>
+
+<div class="card card-warn">
+  <p>Drug ads love <strong>RRR</strong> because it sounds dramatic. "50% reduction in heart attacks!" But if risk went from 2% to 1%, the ARR is just 1% and <strong>NNT = 100</strong>. You'd treat 100 people for 1 to benefit. Always ask for the <strong>absolute</strong> numbers.</p>
+</div>
+
+<!-- ==================== STATISTICAL TESTS DECISION TREE ==================== -->
+<h2>Which Statistical Test? — Decision Tree</h2>
+<p>Work through the branches. Each step challenges you before revealing the answer.</p>
+
+<div id="statTree">
+  <div class="dt-node dt-root" id="statTreeRoot">
+    <div class="dt-question">What type of data is your <strong>outcome variable</strong>?</div>
+    <div class="dt-options" id="statTreeRootOpts">
+      <button class="dt-opt-btn" onclick="statTreeStep(this, 'categorical')">Categorical (yes/no, dead/alive, group A/B/C)</button>
+      <button class="dt-opt-btn" onclick="statTreeStep(this, 'continuous')">Continuous (blood pressure, weight, lab values)</button>
+    </div>
+    <div class="dt-result" id="statStep1"></div>
+  </div>
+</div>
+<button onclick="resetStatTree()" style="background:#1e293b;border:1px solid #475569;color:#94a3b8;padding:0.4rem 0.75rem;border-radius:0.4rem;cursor:pointer;font-family:inherit;font-size:0.65rem;margin-top:0.25rem;transition:all 0.2s;">Reset tree</button>
+
+<h3>Statistical Tests — Quick-Reference</h3>
+<p style="font-size:0.7rem; color:#94a3b8;">Don't want to click through the tree? Here's the whole thing in one table.</p>
+
+<div class="ref-table-wrap">
+<table class="ref-table">
+  <tr>
+    <th>Scenario</th>
+    <th>Test</th>
+    <th>Board Clue</th>
+  </tr>
+  <tr>
+    <td>Categorical, 2 groups, <span class="key-point">large</span> sample</td>
+    <td class="row-label">Chi-square (&#x3C7;&#xB2;)</td>
+    <td>All expected counts &#x2265; 5</td>
+  </tr>
+  <tr>
+    <td>Categorical, 2 groups, <span class="danger">small</span> sample</td>
+    <td class="row-label">Fisher exact</td>
+    <td>"small cell counts" or any expected count &lt; 5</td>
+  </tr>
+  <tr>
+    <td>Categorical, 3+ groups</td>
+    <td class="row-label">Chi-square</td>
+    <td>Same test, bigger table</td>
+  </tr>
+  <tr>
+    <td>Continuous, normal, <strong>2 groups</strong></td>
+    <td class="row-label">t-test</td>
+    <td>Paired = before/after same subjects. Unpaired = different subjects</td>
+  </tr>
+  <tr>
+    <td>Continuous, normal, <strong>3+ groups</strong></td>
+    <td class="row-label">ANOVA</td>
+    <td>If significant, use post-hoc (Tukey/Bonferroni) to find which groups differ</td>
+  </tr>
+  <tr>
+    <td>Continuous, <span class="danger">non-normal</span>, 2 groups</td>
+    <td class="row-label">Mann-Whitney U</td>
+    <td>"non-normally distributed" + "2 groups" = Mann-Whitney</td>
+  </tr>
+  <tr>
+    <td>Continuous, <span class="danger">non-normal</span>, 3+ groups</td>
+    <td class="row-label">Kruskal-Wallis</td>
+    <td>Non-parametric ANOVA</td>
+  </tr>
+  <tr>
+    <td>Correlation between 2 continuous variables</td>
+    <td class="row-label">Pearson (normal) / Spearman (non-normal)</td>
+    <td>"association between two measurements"</td>
+  </tr>
+</table>
+</div>
+
+<!-- ==================== POWER & ERROR ==================== -->
+<h2>Power, Error & p-Values</h2>
+
+<div class="card">
+  <h3 style="margin-top:0;"><span class="sensory-error">Type I Error (alpha)</span></h3>
+  <p>You rejected the null hypothesis, but it was actually true. You said "there IS a difference" when there isn't. A <strong>false positive</strong> of the study itself.</p>
+  <p style="font-size:0.7rem; color:#94a3b8;">Standard threshold: alpha = 0.05 (5% chance of this error)</p>
+</div>
+
+<div class="card">
+  <h3 style="margin-top:0;"><span class="sensory-error">Type II Error (beta)</span></h3>
+  <p>You failed to reject the null, but the alternative was true. You said "no difference" when there IS one. A <strong>false negative</strong> of the study itself.</p>
+  <p style="font-size:0.7rem; color:#94a3b8;">Standard threshold: beta = 0.20 (20% chance of this error)</p>
+</div>
+
+<div class="card" style="border-color: #a78bfa;">
+  <h3 style="margin-top:0;"><span class="sensory-power">Power = 1 − beta</span></h3>
+  <p>The probability of correctly detecting a real effect. Standard = <strong>0.80 (80%)</strong>.</p>
+  <p>How to increase power: <strong>increase sample size</strong> (most common), increase effect size, increase alpha (rarely done), decrease variability.</p>
+</div>
+
+<h3>Type I vs Type II — Stop Confusing Them</h3>
+<div class="ref-table-wrap">
+<table class="ref-table">
+  <tr>
+    <th></th>
+    <th style="color:#f87171;">Type I Error (alpha)</th>
+    <th style="color:#a78bfa;">Type II Error (beta)</th>
+  </tr>
+  <tr>
+    <td class="row-label">What happened</td>
+    <td>Said "there IS a difference" — but there isn't</td>
+    <td>Said "no difference" — but there IS one</td>
+  </tr>
+  <tr>
+    <td class="row-label">Analogy</td>
+    <td class="danger">False positive of the study</td>
+    <td class="danger">False negative of the study</td>
+  </tr>
+  <tr>
+    <td class="row-label">Threshold</td>
+    <td class="formula">alpha = 0.05</td>
+    <td class="formula">beta = 0.20</td>
+  </tr>
+  <tr>
+    <td class="row-label">Related to</td>
+    <td>p-value (p &lt; alpha = significant)</td>
+    <td class="key-point">Power = 1 - beta = 0.80</td>
+  </tr>
+  <tr>
+    <td class="row-label">Board clue</td>
+    <td>"False alarm" — rejected null when it was true</td>
+    <td>"Missed it" — small sample, underpowered study</td>
+  </tr>
+  <tr>
+    <td class="row-label">Fix</td>
+    <td>Lower alpha (stricter threshold)</td>
+    <td class="key-point">Increase sample size</td>
+  </tr>
+</table>
+</div>
+
+<div class="challenge-box">
+  <div class="challenge-q">A study with 50 patients finds no significant difference between drug A and placebo (p = 0.12). The investigator concludes the drug doesn't work. What's the most likely problem?</div>
+  <div class="challenge-options">
+    <button class="challenge-btn" onclick="powerAnswer(this, false)">Type I error — they should've found a difference</button>
+    <button class="challenge-btn" onclick="powerAnswer(this, true)">Underpowered — sample too small to detect a real difference (Type II error)</button>
+    <button class="challenge-btn" onclick="powerAnswer(this, false)">The p-value threshold should be 0.10, not 0.05</button>
+  </div>
+  <div class="challenge-explain" id="power-explain"></div>
+</div>
+
+<div class="card card-info">
+  <h3 style="margin-top:0;">p-Value and Confidence Intervals</h3>
+  <p><span class="tip">p-value<span class="tip-text">The probability of seeing results this extreme (or more) IF the null hypothesis were true. It is NOT the probability that the null is true. This is the most commonly misinterpreted stat on boards.</span></span> &lt; 0.05 = statistically significant. But it says nothing about clinical significance.</p>
+  <p><span class="tip">95% Confidence Interval<span class="tip-text">If you repeated the study 100 times, ~95 of those intervals would contain the true value. A 95% CI for RR that crosses 1.0 = not significant. A 95% CI for a mean difference that crosses 0 = not significant.</span></span>: if the CI for an RR or OR <strong>includes 1.0</strong>, the result is NOT statistically significant. If the CI for a mean difference <strong>includes 0</strong>, NOT significant.</p>
+</div>
+
+<!-- ==================== ELIMINATION GAME ==================== -->
+<h2>Elimination Game — Which Study Type?</h2>
+<p style="color:#94a3b8; font-size:0.7rem;">Five scenarios. Each clue eliminates options until one remains. Think before each reveal.</p>
+
+<div class="elim-game" id="elimGame">
+  <!-- Populated by JS -->
+</div>
+
+<!-- ==================== QUIZ ==================== -->
+<h2>Clinical Vignettes</h2>
+<p style="color:#94a3b8; font-size:0.7rem;">4 board-style questions pulled from a rotating pool. Different every time you load the page.</p>
+
+<div class="quiz-section" id="quizSection">
+  <!-- Populated by JS -->
+</div>
+<div class="quiz-score" id="quizScore"></div>
+
+<div style="margin: 2rem 0; text-align:center; font-size:0.65rem; color:#334155;">
+  built for Mo | bone wizardry
+</div>
+
+<script>
+// ==================== TOOLTIPS & HOOKS ====================
+function initTips() {
+  document.querySelectorAll('.tip, .mem-hook').forEach(t => {
+    t.addEventListener('click', e => {
+      e.stopPropagation();
+      document.querySelectorAll('.tip.active, .mem-hook.active').forEach(a => { if (a !== t) a.classList.remove('active'); });
+      t.classList.toggle('active');
+    });
+  });
+  document.addEventListener('click', () => document.querySelectorAll('.tip.active, .mem-hook.active').forEach(a => a.classList.remove('active')));
+}
+
+// ==================== PROGRESS BAR ====================
+window.addEventListener('scroll', () => {
+  const h = document.documentElement.scrollHeight - window.innerHeight;
+  document.getElementById('progressBar').style.width = h > 0 ? (window.scrollY / h * 100) + '%' : '0%';
+});
+
+// ==================== OPENER CHALLENGE ====================
+function openerAnswer(btn, correct) {
+  const box = document.getElementById('opener-challenge');
+  const explain = document.getElementById('opener-explain');
+  box.querySelectorAll('.challenge-btn').forEach(b => {
+    b.classList.add('disabled');
+    if (b === btn) b.classList.add(correct ? 'correct' : 'wrong');
+  });
+  explain.innerHTML = correct
+    ? '<span style="color:#4ade80;font-weight:700;">Exactly right.</span> This is <strong>SnNOut</strong> — a highly <strong>Se</strong>nsitive test, when <strong>N</strong>egative, rules <strong>Out</strong> disease. 95% sensitivity means only 5% of truly sick people are missed. A negative result is very reassuring. This one rule will show up 3-4 times on your boards.'
+    : '<span style="color:#fbbf24;font-weight:700;">Good instinct, but yes — you CAN rule it out.</span> This is <strong>SnNOut</strong>: a highly <strong>Se</strong>nsitive test, when <strong>N</strong>egative, rules <strong>Out</strong> disease. With 95% sensitivity, only 5% of truly sick people test negative. So a negative result is very reassuring. Remember: <strong>sensitivity = true positive rate</strong>. High sensitivity = very few false negatives.';
+  explain.classList.add('show');
+}
+
+// ==================== SCREENING CHALLENGE ====================
+function screenAnswer(btn, correct) {
+  const box = btn.closest('.challenge-box');
+  const explain = document.getElementById('screen-explain');
+  box.querySelectorAll('.challenge-btn').forEach(b => {
+    b.classList.add('disabled');
+    if (b === btn) b.classList.add(correct ? 'correct' : 'wrong');
+  });
+  explain.innerHTML = correct
+    ? '<span style="color:#4ade80;font-weight:700;">Right.</span> For screening, you want <strong>high sensitivity</strong> — you can\'t afford to miss a deadly cancer. False positives are okay at the screening stage because you\'ll confirm with a follow-up test (which needs <strong>high specificity</strong>). Screening = sensitive. Confirmation = specific.'
+    : '<span style="color:#fbbf24;font-weight:700;">Not quite.</span> For <strong>screening</strong> a deadly disease, you want <strong>high sensitivity</strong> — missing a cancer (false negative) is worse than a false alarm (false positive). You can follow up positives with a confirmatory test that has high specificity. <strong>Screening = sensitive. Confirmation = specific.</strong>';
+  explain.classList.add('show');
+}
+
+// ==================== 2x2 CALCULATOR ====================
+function calc2x2() {
+  const tp = parseInt(document.getElementById('tp').value) || 0;
+  const fp = parseInt(document.getElementById('fp').value) || 0;
+  const fn = parseInt(document.getElementById('fn').value) || 0;
+  const tn = parseInt(document.getElementById('tn').value) || 0;
+  const total = tp + fp + fn + tn;
+
+  const sens = (tp + fn) > 0 ? (tp / (tp + fn) * 100).toFixed(1) + '%' : '—';
+  const spec = (tn + fp) > 0 ? (tn / (tn + fp) * 100).toFixed(1) + '%' : '—';
+  const ppv = (tp + fp) > 0 ? (tp / (tp + fp) * 100).toFixed(1) + '%' : '—';
+  const npv = (tn + fn) > 0 ? (tn / (tn + fn) * 100).toFixed(1) + '%' : '—';
+  const prev = total > 0 ? ((tp + fn) / total * 100).toFixed(1) + '%' : '—';
+  const acc = total > 0 ? ((tp + tn) / total * 100).toFixed(1) + '%' : '—';
+
+  document.getElementById('calcSens').textContent = sens;
+  document.getElementById('calcSpec').textContent = spec;
+  document.getElementById('calcPPV').textContent = ppv;
+  document.getElementById('calcNPV').textContent = npv;
+  document.getElementById('calcPrev').textContent = prev;
+  document.getElementById('calcAcc').textContent = acc;
+
+  // Margin totals
+  document.getElementById('calcTotPos').textContent = tp + fp;
+  document.getElementById('calcTotNeg').textContent = fn + tn;
+  document.getElementById('calcTotDis').textContent = tp + fn;
+  document.getElementById('calcTotNonDis').textContent = fp + tn;
+}
+
+// ==================== PREVALENCE SLIDER ====================
+function updatePrevalence() {
+  const prev = parseInt(document.getElementById('prevSlider').value);
+  document.getElementById('prevLabel').textContent = prev + '%';
+  const pop = 10000;
+  const sens = 0.95, spec = 0.95;
+  const sick = Math.round(pop * prev / 100);
+  const healthy = pop - sick;
+  const tp = Math.round(sick * sens);
+  const fn = sick - tp;
+  const tn = Math.round(healthy * spec);
+  const fp = healthy - tn;
+  const ppv = (tp + fp) > 0 ? (tp / (tp + fp) * 100).toFixed(1) : '—';
+  const npv = (tn + fn) > 0 ? (tn / (tn + fn) * 100).toFixed(1) : '—';
+  document.getElementById('sliderPPV').textContent = ppv + '%';
+  document.getElementById('sliderNPV').textContent = npv + '%';
+  document.getElementById('sliderFP').textContent = fp.toLocaleString();
+  document.getElementById('sliderPPV').style.color = parseFloat(ppv) < 50 ? '#f87171' : '#fbbf24';
+}
+
+// ==================== NNT CALCULATOR ====================
+function calcNNT() {
+  const cer = parseFloat(document.getElementById('nntControl').value) / 100;
+  const eer = parseFloat(document.getElementById('nntTreat').value) / 100;
+  if (isNaN(cer) || isNaN(eer)) return;
+  const arr = cer - eer;
+  const rrr = cer > 0 ? (arr / cer) : 0;
+  const nnt = arr > 0 ? Math.ceil(1 / arr) : (arr === 0 ? '∞' : 'N/A (treatment is worse)');
+
+  document.getElementById('nntARR').textContent = (arr * 100).toFixed(1) + '%';
+  document.getElementById('nntRRR').textContent = (rrr * 100).toFixed(1) + '%';
+  document.getElementById('nntNNT').textContent = typeof nnt === 'number' ? nnt : nnt;
+
+  // Visual
+  const vis = document.getElementById('nntVisual');
+  const explain = document.getElementById('nntExplain');
+  vis.innerHTML = '';
+  if (typeof nnt === 'number' && nnt > 0 && nnt <= 100) {
+    for (let i = 0; i < Math.min(nnt, 50); i++) {
+      const d = document.createElement('div');
+      d.className = 'nnt-person' + (i === 0 ? ' treated' : '');
+      vis.appendChild(d);
+    }
+    explain.textContent = `Treat ${nnt} patients → 1 benefits (green). The rest (gray) get treatment but no benefit from it.`;
+  } else {
+    explain.textContent = '';
+  }
+}
+
+// ==================== STATISTICAL TEST DECISION TREE ====================
+function statTreeStep(btn, type) {
+  const parent = btn.closest('.dt-node');
+  parent.querySelectorAll('.dt-opt-btn').forEach(b => {
+    b.classList.remove('selected');
+    b.style.pointerEvents = 'none';
+    b.style.opacity = '0.5';
+  });
+  btn.classList.add('selected');
+  btn.style.opacity = '1';
+
+  const existingChildren = parent.querySelectorAll('.dt-node');
+  existingChildren.forEach(c => c.remove());
+
+  if (type === 'categorical') {
+    const node = document.createElement('div');
+    node.className = 'dt-node';
+    node.innerHTML = `
+      <div class="dt-question">Categorical outcome. How many groups are you comparing?</div>
+      <div class="dt-options">
+        <button class="dt-opt-btn" onclick="statTreeStep(this, 'cat2')">2 groups</button>
+        <button class="dt-opt-btn" onclick="statTreeStep(this, 'cat3')">3+ groups</button>
+      </div>`;
+    parent.appendChild(node);
+  } else if (type === 'continuous') {
+    const node = document.createElement('div');
+    node.className = 'dt-node';
+    node.innerHTML = `
+      <div class="dt-question">Continuous outcome. Is the data <strong>normally distributed</strong>?</div>
+      <div class="dt-options">
+        <button class="dt-opt-btn" onclick="statTreeStep(this, 'normal')">Yes, normally distributed (parametric)</button>
+        <button class="dt-opt-btn" onclick="statTreeStep(this, 'nonnormal')">No / not sure (non-parametric)</button>
+      </div>`;
+    parent.appendChild(node);
+  } else if (type === 'cat2') {
+    const node = document.createElement('div');
+    node.className = 'dt-node';
+    node.innerHTML = `
+      <div class="dt-question">2 groups, categorical data. What's the sample size?</div>
+      <div class="dt-options">
+        <button class="dt-opt-btn" onclick="statTreeStep(this, 'chi2')">Large sample (all expected counts >= 5)</button>
+        <button class="dt-opt-btn" onclick="statTreeStep(this, 'fisher')">Small sample (any expected count < 5)</button>
+      </div>`;
+    parent.appendChild(node);
+  } else if (type === 'cat3') {
+    showResult(parent, '<strong style="color:#60a5fa;">Chi-square test</strong> — comparing proportions across 3+ groups. Same test as 2 groups with large samples, just a bigger table.');
+  } else if (type === 'chi2') {
+    showResult(parent, '<strong style="color:#60a5fa;">Chi-square (χ²) test</strong> — the workhorse for categorical data. Compares observed vs expected frequencies. Large sample only (expected count ≥ 5 in every cell).');
+  } else if (type === 'fisher') {
+    showResult(parent, '<strong style="color:#60a5fa;">Fisher exact test</strong> — for small samples where chi-square assumptions fail. Board favorite: "which test is appropriate for this 2x2 table with small cell counts?" Answer is always Fisher.');
+  } else if (type === 'normal') {
+    const node = document.createElement('div');
+    node.className = 'dt-node';
+    node.innerHTML = `
+      <div class="dt-question">Normal data. How many groups?</div>
+      <div class="dt-options">
+        <button class="dt-opt-btn" onclick="statTreeStep(this, 'ttest')">2 groups</button>
+        <button class="dt-opt-btn" onclick="statTreeStep(this, 'anova')">3+ groups</button>
+      </div>`;
+    parent.appendChild(node);
+  } else if (type === 'nonnormal') {
+    const node = document.createElement('div');
+    node.className = 'dt-node';
+    node.innerHTML = `
+      <div class="dt-question">Non-normal data. How many groups?</div>
+      <div class="dt-options">
+        <button class="dt-opt-btn" onclick="statTreeStep(this, 'mannwhit')">2 groups</button>
+        <button class="dt-opt-btn" onclick="statTreeStep(this, 'kruskal')">3+ groups</button>
+      </div>`;
+    parent.appendChild(node);
+  } else if (type === 'ttest') {
+    showResult(parent, '<strong style="color:#60a5fa;">Student\'s t-test</strong> — compares means between 2 groups. Paired t-test if same subjects measured twice (before/after). Unpaired (independent) t-test if different subjects. Assumes normal distribution.');
+  } else if (type === 'anova') {
+    showResult(parent, '<strong style="color:#60a5fa;">ANOVA</strong> — compares means across 3+ groups. It\'s basically a t-test that can handle multiple groups without inflating Type I error. If ANOVA is significant, use post-hoc tests (Tukey, Bonferroni) to find WHICH groups differ.');
+  } else if (type === 'mannwhit') {
+    showResult(parent, '<strong style="color:#60a5fa;">Mann-Whitney U test</strong> — the non-parametric version of the unpaired t-test. Compares medians (technically ranks) between 2 groups. Use when data is skewed or ordinal. Board clue: "non-normally distributed" + "2 groups" = Mann-Whitney.');
+  } else if (type === 'kruskal') {
+    showResult(parent, '<strong style="color:#60a5fa;">Kruskal-Wallis test</strong> — the non-parametric version of ANOVA. Compares ranks across 3+ groups when normality assumption is violated.');
+  }
+}
+
+function resetStatTree() {
+  var root = document.getElementById('statTreeRoot');
+  // Remove all child dt-nodes
+  var children = root.querySelectorAll('.dt-node');
+  for (var i = 0; i < children.length; i++) children[i].remove();
+  // Re-enable root buttons
+  var opts = document.getElementById('statTreeRootOpts').querySelectorAll('.dt-opt-btn');
+  for (var i = 0; i < opts.length; i++) {
+    opts[i].classList.remove('selected');
+    opts[i].style.pointerEvents = '';
+    opts[i].style.opacity = '';
+  }
+}
+
+function showResult(parent, html) {
+  const node = document.createElement('div');
+  node.className = 'dt-node';
+  node.style.borderColor = '#059669';
+  node.style.background = '#0a1a14';
+  node.innerHTML = `<div style="font-size:0.72rem;line-height:1.6;">${html}</div>`;
+  parent.appendChild(node);
+}
+
+// ==================== POWER CHALLENGE ====================
+function powerAnswer(btn, correct) {
+  const box = btn.closest('.challenge-box');
+  const explain = document.getElementById('power-explain');
+  box.querySelectorAll('.challenge-btn').forEach(b => {
+    b.classList.add('disabled');
+    if (b === btn) b.classList.add(correct ? 'correct' : 'wrong');
+  });
+  explain.innerHTML = correct
+    ? '<span style="color:#4ade80;font-weight:700;">Exactly.</span> 50 patients is likely too few to detect a real difference — this is a <strong>Type II error</strong> (false negative of the study). The study was <strong>underpowered</strong>. The fix: increase sample size to increase power (1 − beta). A p-value of 0.12 doesn\'t mean the drug doesn\'t work — it means the study couldn\'t prove it does.'
+    : '<span style="color:#fbbf24;font-weight:700;">Not quite.</span> With only 50 patients, the most likely problem is that the study was <strong>underpowered</strong> — too few subjects to detect a real difference. This is <strong>Type II error</strong> (beta): failing to reject a false null hypothesis. The fix is more patients. A non-significant p-value never proves the null — it just means you didn\'t have enough evidence to reject it.';
+  explain.classList.add('show');
+}
+
+// ==================== ELIMINATION GAME ====================
+const elimScenarios = [
+  {
+    title: "Scenario 1",
+    question: "Researchers want to study whether a new statin reduces heart attacks. They assign 500 patients to the drug and 500 to placebo, then follow them for 5 years.",
+    options: ["Case-Control", "Cross-Sectional", "Cohort", "RCT", "Case Series"],
+    clues: [
+      { text: "Clue: Participants were randomly ASSIGNED to groups.", eliminate: "Cohort", explain: "Random assignment isn't cohort — cohort studies observe existing groups." },
+      { text: "Clue: There is a control group receiving placebo.", eliminate: "Case Series", explain: "Case series have no comparison group at all." },
+      { text: "Clue: Researchers followed subjects FORWARD in time for outcomes.", eliminate: "Case-Control", explain: "Case-control starts with the outcome and looks backward." },
+      { text: "Clue: Exposure was controlled by the investigators, not just observed.", eliminate: "Cross-Sectional", explain: "Cross-sectional studies only measure at one point in time, and don't assign exposure." }
+    ],
+    answer: "RCT"
+  },
+  {
+    title: "Scenario 2",
+    question: "Researchers identified 200 patients with pancreatic cancer and 200 matched controls without cancer. They reviewed medical records for prior coffee consumption.",
+    options: ["RCT", "Cohort", "Case-Control", "Cross-Sectional", "Meta-Analysis"],
+    clues: [
+      { text: "Clue: Subjects were selected BASED ON having (or not having) the disease.", eliminate: "Cohort", explain: "Cohort studies select based on exposure, not outcome." },
+      { text: "Clue: Researchers looked BACKWARD at past exposures.", eliminate: "Cross-Sectional", explain: "Cross-sectional measures everything at the same time." },
+      { text: "Clue: No intervention was performed — this is purely observational.", eliminate: "RCT", explain: "RCTs require the researcher to assign an intervention." },
+      { text: "Clue: This is a single original study, not a combination of multiple studies.", eliminate: "Meta-Analysis", explain: "Meta-analyses pool data from many studies." }
+    ],
+    answer: "Case-Control"
+  },
+  {
+    title: "Scenario 3",
+    question: "A survey of 10,000 adults measured both blood pressure and salt intake at a single visit. Researchers found that high-salt diets correlated with hypertension.",
+    options: ["RCT", "Cohort", "Case-Control", "Cross-Sectional", "Case Series"],
+    clues: [
+      { text: "Clue: Everything was measured at ONE point in time.", eliminate: "Cohort", explain: "Cohort studies follow subjects over time." },
+      { text: "Clue: No one was assigned to an intervention.", eliminate: "RCT", explain: "RCTs require randomized assignment." },
+      { text: "Clue: Exposure and outcome were measured simultaneously, not sequentially.", eliminate: "Case-Control", explain: "Case-control starts with outcome, then goes backward to find exposure." },
+      { text: "Clue: There IS a comparison between groups (high vs low salt), not just a description.", eliminate: "Case Series", explain: "Case series are descriptive with no comparison group." }
+    ],
+    answer: "Cross-Sectional"
+  },
+  {
+    title: "Scenario 4",
+    question: "Investigators followed 5,000 smokers and 5,000 non-smokers for 20 years to see who developed lung cancer.",
+    options: ["Case-Control", "Cross-Sectional", "Cohort", "RCT", "Case Series"],
+    clues: [
+      { text: "Clue: Subjects were grouped by EXPOSURE status (smoker vs non-smoker).", eliminate: "Case-Control", explain: "Case-control selects by disease status, not exposure." },
+      { text: "Clue: Researchers followed subjects FORWARD over time.", eliminate: "Cross-Sectional", explain: "Cross-sectional is a single time-point snapshot." },
+      { text: "Clue: The exposure (smoking) was NOT assigned by researchers — it's observational.", eliminate: "RCT", explain: "You can't randomly assign people to smoke (ethical issue)." },
+      { text: "Clue: There IS a comparison group (non-smokers), not just a description.", eliminate: "Case Series", explain: "Case series have no comparison." }
+    ],
+    answer: "Cohort"
+  },
+  {
+    title: "Scenario 5",
+    question: "A dermatologist publishes a report describing 7 patients who all developed a rare rash after taking a new antibiotic.",
+    options: ["RCT", "Cohort", "Case-Control", "Cross-Sectional", "Case Series"],
+    clues: [
+      { text: "Clue: There is NO control or comparison group.", eliminate: "RCT", explain: "RCTs need a comparison/control group." },
+      { text: "Clue: Subjects were not followed over time — this is a report of existing cases.", eliminate: "Cohort", explain: "Cohort studies track groups forward through time." },
+      { text: "Clue: No attempt was made to match cases with non-cases.", eliminate: "Case-Control", explain: "Case-control requires a matched control group without the disease." },
+      { text: "Clue: No population was surveyed — just individual interesting cases.", eliminate: "Cross-Sectional", explain: "Cross-sectional surveys a defined population." }
+    ],
+    answer: "Case Series"
+  }
+];
+
+function buildElimGame() {
+  const container = document.getElementById('elimGame');
+  container.innerHTML = '';
+  elimScenarios.forEach((sc, si) => {
+    const div = document.createElement('div');
+    div.className = 'elim-scenario';
+    div.innerHTML = `
+      <div style="font-weight:700;color:#e2e8f0;font-size:0.8rem;margin-bottom:0.4rem;">${sc.title}</div>
+      <p style="font-size:0.72rem;line-height:1.6;margin-bottom:0.5rem;">${sc.question}</p>
+      <div class="elim-cards" id="elimCards${si}">
+        ${sc.options.map(o => `<div class="elim-card" data-name="${o}">${o}</div>`).join('')}
+      </div>
+      <div style="display:flex;align-items:center;gap:0.5rem;margin-top:0.5rem;">
+        <button class="elim-clue-btn" id="elimBtn${si}" onclick="revealElimClue(${si})">Reveal clue 1 of ${sc.clues.length}</button>
+        <span style="font-size:0.6rem;color:#475569;" id="elimRemain${si}">${sc.options.length} options remaining</span>
+      </div>
+      <div id="elimClueList${si}" style="margin-top:0.4rem;"></div>
+    `;
+    container.appendChild(div);
+  });
+  window.elimState = elimScenarios.map(() => 0);
+}
+
+function revealElimClue(si) {
+  const sc = elimScenarios[si];
+  const idx = window.elimState[si];
+  if (idx >= sc.clues.length) return;
+
+  const clue = sc.clues[idx];
+  const clueNum = idx + 1;
+
+  // Append clue to list (accumulate, don't replace)
+  const clueList = document.getElementById('elimClueList' + si);
+  const clueDiv = document.createElement('div');
+  clueDiv.style.cssText = 'padding:0.4rem 0.5rem;margin-bottom:0.3rem;background:#0a1220;border-left:2px solid #60a5fa;border-radius:0 0.3rem 0.3rem 0;font-size:0.68rem;line-height:1.5;';
+  clueDiv.innerHTML = `<span style="color:#60a5fa;font-weight:700;">Clue ${clueNum}:</span> ${clue.text.replace('Clue: ', '')}<br><span style="color:#94a3b8;font-size:0.62rem;">&#x2192; Eliminates <strong style="color:#f87171;text-decoration:line-through;">${clue.eliminate}</strong> &#x2014; ${clue.explain}</span>`;
+  clueList.appendChild(clueDiv);
+
+  // Eliminate the card
+  const cards = document.querySelectorAll('#elimCards' + si + ' .elim-card');
+  cards.forEach(function(c) {
+    if (c.getAttribute('data-name') === clue.eliminate) c.classList.add('eliminated');
+  });
+
+  window.elimState[si]++;
+  const remaining = sc.options.length - window.elimState[si];
+  document.getElementById('elimRemain' + si).textContent = remaining + ' option' + (remaining !== 1 ? 's' : '') + ' remaining';
+
+  if (window.elimState[si] >= sc.clues.length) {
+    document.getElementById('elimBtn' + si).disabled = true;
+    document.getElementById('elimBtn' + si).textContent = 'All clues revealed';
+    // Highlight winner
+    cards.forEach(function(c) {
+      if (c.getAttribute('data-name') === sc.answer) c.classList.add('winner');
+    });
+    var answerDiv = document.createElement('div');
+    answerDiv.style.cssText = 'padding:0.5rem;margin-top:0.3rem;background:#0a1a14;border:1px solid #059669;border-radius:0.4rem;text-align:center;';
+    answerDiv.innerHTML = '<span style="color:#4ade80;font-weight:700;font-size:0.8rem;">Answer: ' + sc.answer + '</span>';
+    clueList.appendChild(answerDiv);
+  } else {
+    var nextNum = window.elimState[si] + 1;
+    document.getElementById('elimBtn' + si).textContent = 'Reveal clue ' + nextNum + ' of ' + sc.clues.length;
+  }
+}
+
+// ==================== QUIZ ====================
+const questionPool = [
+  {
+    stem: "A new rapid strep test has a sensitivity of 90% and specificity of 95%. In a clinic where 30% of patients with sore throat have strep, what happens to the PPV if the test is used in a school outbreak where 60% have strep?",
+    options: ["PPV decreases", "PPV increases", "PPV stays the same", "PPV becomes unpredictable"],
+    correct: 1,
+    explain: "PPV increases with prevalence. When more people in the population actually have the disease, a positive test is more likely to be a true positive. Sensitivity and specificity don't change — they're properties of the test. But PPV and NPV depend on who you're testing."
+  },
+  {
+    stem: "A drug trial shows a reduction in stroke from 4% to 3%. The drug company advertises a '25% reduction in stroke risk.' What are they reporting?",
+    options: ["Absolute risk reduction", "Relative risk reduction", "Number needed to treat", "Odds ratio"],
+    correct: 1,
+    explain: "Good instinct if you were tempted by ARR — but 25% is the relative risk reduction: (4%-3%)/4% = 25%. The ARR is only 1%, and NNT = 1/0.01 = 100. Drug companies prefer RRR because it sounds dramatic. Always ask for the absolute numbers."
+  },
+  {
+    stem: "Researchers study whether a new screening detects colon cancer earlier. Screened patients appear to survive 7 years from diagnosis vs 4 years for unscreened patients, but both groups die at the same average age. This is an example of:",
+    options: ["Length-time bias", "Lead-time bias", "Selection bias", "Hawthorne effect"],
+    correct: 1,
+    explain: "This is lead-time bias. Screening moved the diagnosis earlier, so survival TIME from diagnosis looks longer — but the actual lifespan didn't change. The starting line moved, not the finish line. Fix: compare mortality rates, not survival time from diagnosis."
+  },
+  {
+    stem: "In a study of 2,000 patients, researchers find that a new antibiotic reduces pneumonia mortality from 10% to 8%. What is the NNT?",
+    options: ["20", "50", "100", "25"],
+    correct: 1,
+    explain: "ARR = 10% - 8% = 2% = 0.02. NNT = 1/ARR = 1/0.02 = 50. You need to treat 50 patients with pneumonia for 1 additional patient to survive compared to the old antibiotic."
+  },
+  {
+    stem: "A case-control study finds that patients with lung cancer were more likely to report prior asbestos exposure than controls. However, lung cancer patients may have thought harder about their exposure history. This threat to validity is:",
+    options: ["Selection bias", "Recall bias", "Confounding", "Observer bias"],
+    correct: 1,
+    explain: "Recall bias — people with disease dig deeper into their memory for exposures. The lung cancer patient racks their brain: 'Did I work near asbestos?' The healthy control shrugs and forgets. This is a classic pitfall of case-control studies because they rely on looking backward."
+  },
+  {
+    stem: "A researcher wants to compare mean blood pressures between 3 treatment groups. Data is normally distributed. The appropriate test is:",
+    options: ["Chi-square", "Student's t-test", "ANOVA", "Mann-Whitney U"],
+    correct: 2,
+    explain: "ANOVA — comparing means of a continuous variable (blood pressure) across 3+ groups with normally distributed data. T-test only works for 2 groups. Chi-square is for categorical data. Mann-Whitney is the non-parametric alternative for 2 groups."
+  },
+  {
+    stem: "A study finds p = 0.03 for the difference between drug A and placebo. The 95% confidence interval for the difference in means is 1.2 to 8.7 mmHg. Which statement is correct?",
+    options: ["There's a 3% chance the null hypothesis is true", "The CI excludes 0, consistent with statistical significance", "The drug is clinically significant", "There's a 97% chance the drug works"],
+    correct: 1,
+    explain: "The CI (1.2 to 8.7) does NOT include 0, which is consistent with p < 0.05 — both say the same thing. Common trap: p-value is NOT the probability the null is true. It's the probability of seeing these results IF the null were true. Statistical significance (p<0.05) says nothing about clinical significance."
+  },
+  {
+    stem: "An investigator wants to study a rare disease affecting 1 in 100,000 people. Which study design is most efficient?",
+    options: ["RCT", "Prospective cohort", "Case-control", "Cross-sectional"],
+    correct: 2,
+    explain: "Case-control. For rare diseases, you start with people who HAVE the disease (cases) and match them with controls. A cohort study would need to follow millions of people for years hoping a few develop the disease. Case-control is efficient because you go find the rare cases directly."
+  },
+  {
+    stem: "A clinical trial tests whether exercise reduces diabetes incidence. Patients assigned to the exercise group who didn't actually exercise were still analyzed as part of the exercise group. This is an example of:",
+    options: ["Per-protocol analysis", "Intention-to-treat analysis", "Crossover design", "Selection bias"],
+    correct: 1,
+    explain: "Intention-to-treat (ITT) analysis — everyone is analyzed in the group they were ASSIGNED to, regardless of what they actually did. This preserves the benefits of randomization and prevents attrition bias. Per-protocol would only count those who completed the assigned regimen."
+  },
+  {
+    stem: "A screening program for breast cancer catches more slow-growing tumors than aggressive ones because slow tumors are present longer and more likely to be detected. This is:",
+    options: ["Lead-time bias", "Length-time bias", "Berkson bias", "Sampling bias"],
+    correct: 1,
+    explain: "Length-time bias. Slow-growing tumors have a longer detectable preclinical phase — they're sitting there longer, so screening is more likely to find them. Aggressive tumors grow fast, cause symptoms quickly, and present between screenings. The screened group looks like it has better survival because you're catching the less dangerous cancers."
+  },
+  {
+    stem: "A study of hospital patients finds a strong association between gallstones and diabetes. However, both conditions independently increase the chance of hospitalization. This apparent association is due to:",
+    options: ["Confounding", "Berkson bias", "Lead-time bias", "Recall bias"],
+    correct: 1,
+    explain: "Berkson bias — a type of selection bias specific to hospital-based studies. Both conditions increase hospitalization probability, so hospital patients are enriched for both. The association is an artifact of WHERE you sampled, not actual biology. Use community-based samples to avoid this."
+  },
+  {
+    stem: "A study with 40 patients per group fails to show a significant difference (p=0.09) between a new drug and placebo for reducing cholesterol. Power analysis suggests the study needed 200 per group. The most likely error is:",
+    options: ["Type I error (alpha)", "Type II error (beta)", "Confounding", "Selection bias"],
+    correct: 1,
+    explain: "Type II error (beta) — failing to detect a real difference because the sample was too small. The study was underpowered. Power = 1 - beta. More patients = more power = better chance of detecting a true effect. A non-significant p-value doesn't prove no effect exists — it may just mean you didn't look hard enough."
+  },
+  {
+    stem: "Which of the following increases the power of a study?",
+    options: ["Decreasing sample size", "Increasing sample size", "Decreasing alpha from 0.05 to 0.01", "Using a less sensitive measurement tool"],
+    correct: 1,
+    explain: "Increasing sample size is the most common way to increase power. More subjects = less random noise = easier to detect a real difference. Decreasing alpha (making your threshold stricter) actually DECREASES power — you're making it harder to reject the null."
+  },
+  {
+    stem: "Researchers compare outcomes in patients who chose surgery vs. medication for back pain. Patients who chose surgery were younger and healthier. The difference in outcomes may be due to:",
+    options: ["Recall bias", "Hawthorne effect", "Confounding by indication", "Length-time bias"],
+    correct: 2,
+    explain: "Confounding by indication (a type of confounding). The treatment choice was influenced by patient characteristics (age, health) that also affect outcomes. Younger, healthier patients chose surgery AND have better outcomes regardless. The fix: randomization (removes all confounding) or statistical adjustment."
+  }
+];
+
+function buildQuiz() {
+  const container = document.getElementById('quizSection');
+  container.innerHTML = '';
+  // Pick 4 random questions
+  const shuffled = [...questionPool].sort(() => Math.random() - 0.5);
+  const picked = shuffled.slice(0, 4);
+  window.quizState = { total: 4, correct: 0, answered: 0 };
+
+  picked.forEach((q, qi) => {
+    // Shuffle options while tracking correct
+    const indices = q.options.map((_, i) => i).sort(() => Math.random() - 0.5);
+    const newCorrect = indices.indexOf(q.correct);
+
+    const card = document.createElement('div');
+    card.className = 'quiz-card';
+    card.innerHTML = `
+      <div class="quiz-stem">${qi + 1}. ${q.stem}</div>
+      <div class="quiz-options" id="quizOpts${qi}">
+        ${indices.map((origIdx, newIdx) => `
+          <button class="quiz-opt" data-qi="${qi}" data-correct="${newIdx === newCorrect}" onclick="quizAnswer(this, ${qi}, ${newIdx === newCorrect ? 'true' : 'false'}, ${qi})">
+            ${String.fromCharCode(65 + newIdx)}. ${q.options[origIdx]}
+          </button>
+        `).join('')}
+      </div>
+      <div class="quiz-explain" id="quizExplain${qi}">${q.explain}</div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+function quizAnswer(btn, qi, correct) {
+  const isCorrect = correct === true || correct === 'true';
+  const opts = document.querySelectorAll(`#quizOpts${qi} .quiz-opt`);
+  opts.forEach(o => {
+    o.classList.add('q-disabled');
+    if (o.dataset.correct === 'true') o.classList.add('q-correct');
+    else if (o === btn && !isCorrect) o.classList.add('q-wrong');
+    else o.classList.add('q-dimmed');
+  });
+  document.getElementById('quizExplain' + qi).classList.add('show');
+
+  window.quizState.answered++;
+  if (isCorrect) window.quizState.correct++;
+
+  if (window.quizState.answered === window.quizState.total) {
+    const score = document.getElementById('quizScore');
+    const pct = Math.round(window.quizState.correct / window.quizState.total * 100);
+    score.innerHTML = `You got <strong>${window.quizState.correct}/${window.quizState.total}</strong> (${pct}%). ${pct >= 75 ? 'Nice work. The 2x2 table is in your bones now.' : 'Review the sections above and try reloading for new questions.'}`;
+    score.classList.add('show');
+    if (pct >= 75) fireConfetti();
+  }
+}
+
+// ==================== CONFETTI ====================
+function fireConfetti() {
+  const canvas = document.getElementById('confetti-canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  const particles = [];
+  const colors = ['#4ade80', '#60a5fa', '#fde047', '#f472b6', '#a78bfa'];
+  for (let i = 0; i < 80; i++) {
+    particles.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height - canvas.height,
+      w: Math.random() * 8 + 4,
+      h: Math.random() * 4 + 2,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      vy: Math.random() * 3 + 2,
+      vx: (Math.random() - 0.5) * 2,
+      rot: Math.random() * Math.PI * 2,
+      rv: (Math.random() - 0.5) * 0.1
+    });
+  }
+  let frame = 0;
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particles.forEach(p => {
+      p.y += p.vy;
+      p.x += p.vx;
+      p.rot += p.rv;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+      ctx.restore();
+    });
+    frame++;
+    if (frame < 120) requestAnimationFrame(draw);
+    else ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+  draw();
+}
+
+// ==================== INIT ====================
+document.addEventListener('DOMContentLoaded', () => {
+  initTips();
+  calc2x2();
+  updatePrevalence();
+  calcNNT();
+  buildElimGame();
+  buildQuiz();
+});
+</script>
+</body>
+</html>
